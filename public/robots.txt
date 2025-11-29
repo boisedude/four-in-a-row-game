@@ -1,0 +1,14 @@
+# robots.txt for Connect 4 by M. Cooper
+# www.mcooper.com
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://www.mcooper.com/connect4/sitemap.xml
+
+# Block access to source maps
+Disallow: /*.map$
+
+# Crawl-delay (optional, adjust as needed)
+# Crawl-delay: 10

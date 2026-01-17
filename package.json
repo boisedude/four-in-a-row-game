@@ -2,6 +2,7 @@
   "name": "connect4-game",
   "private": true,
   "version": "1.0.0",
+  "license": "MIT",
   "description": "Connect 4 - Play Coop! Challenge Coop with three hilarious difficulty levels. Built with React 19, TypeScript, and featuring rotating edgy humor.",
   "author": "M. Cooper (www.mcooper.com)",
   "keywords": [

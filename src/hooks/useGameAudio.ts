@@ -5,6 +5,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { AUDIO } from '@/lib/constants'
 
 type SoundEffect = 'discDrop' | 'victory' | 'defeat' | 'draw' | 'click' | 'hover'
 
@@ -29,8 +30,8 @@ export function useGameAudio() {
         if (AudioContextClass) {
           audioContextRef.current = new AudioContextClass()
         }
-      } catch (error) {
-        console.warn('Web Audio API not supported:', error)
+      } catch {
+        // Web Audio API not supported - audio will be disabled
       }
     }
 
@@ -65,8 +66,8 @@ export function useGameAudio() {
     gainNode.connect(ctx.destination)
 
     // Frequency envelope: starts high, drops quickly (bounce effect)
-    osc.frequency.setValueAtTime(400, now)
-    osc.frequency.exponentialRampToValueAtTime(100, now + 0.1)
+    osc.frequency.setValueAtTime(AUDIO.discDrop.startFrequency, now)
+    osc.frequency.exponentialRampToValueAtTime(AUDIO.discDrop.endFrequency, now + 0.1)
 
     // Volume envelope: quick attack, medium decay
     gainNode.gain.setValueAtTime(0, now)
@@ -85,9 +86,8 @@ export function useGameAudio() {
     const ctx = audioContextRef.current
     const now = ctx.currentTime
 
-    // Play a sequence of ascending notes
-    const notes = [262, 330, 392, 523] // C, E, G, C (major chord)
-    notes.forEach((freq, i) => {
+    // Play a sequence of ascending notes (C, E, G, C major chord)
+    AUDIO.victory.notes.forEach((freq, i) => {
       const osc = ctx.createOscillator()
       const gainNode = ctx.createGain()
 
@@ -121,8 +121,8 @@ export function useGameAudio() {
     gainNode.connect(ctx.destination)
 
     // Descending frequency (sad trombone effect)
-    osc.frequency.setValueAtTime(300, now)
-    osc.frequency.exponentialRampToValueAtTime(100, now + 0.5)
+    osc.frequency.setValueAtTime(AUDIO.defeat.startFrequency, now)
+    osc.frequency.exponentialRampToValueAtTime(AUDIO.defeat.endFrequency, now + 0.5)
 
     // Fade in and out
     gainNode.gain.setValueAtTime(0, now)
@@ -142,7 +142,7 @@ export function useGameAudio() {
     const now = ctx.currentTime
 
     // Play two tones simultaneously
-    ;[220, 330].forEach(freq => {
+    AUDIO.draw.frequencies.forEach(freq => {
       const osc = ctx.createOscillator()
       const gainNode = ctx.createGain()
 
@@ -174,8 +174,8 @@ export function useGameAudio() {
     osc.connect(gainNode)
     gainNode.connect(ctx.destination)
 
-    osc.frequency.setValueAtTime(800, now)
-    osc.frequency.exponentialRampToValueAtTime(400, now + 0.05)
+    osc.frequency.setValueAtTime(AUDIO.click.startFrequency, now)
+    osc.frequency.exponentialRampToValueAtTime(AUDIO.click.endFrequency, now + 0.05)
 
     gainNode.gain.setValueAtTime(0.1, now)
     gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05)
@@ -198,7 +198,7 @@ export function useGameAudio() {
     osc.connect(gainNode)
     gainNode.connect(ctx.destination)
 
-    osc.frequency.setValueAtTime(600, now)
+    osc.frequency.setValueAtTime(AUDIO.hover.frequency, now)
 
     gainNode.gain.setValueAtTime(0.05, now)
     gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.03)

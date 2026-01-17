@@ -5,6 +5,7 @@
 
 import { cn } from '@/lib/utils'
 import type { Player } from '@/types/connect4.types'
+import { WIN_ANIMATION_DELAY_MS } from '@/lib/constants'
 
 interface DiscProps {
   player: Player | null
@@ -36,7 +37,7 @@ export function Disc({
   }
 
   // Calculate animation delay for sequential win animation
-  const sequentialDelay = winningIndex !== undefined ? `${winningIndex * 100}ms` : '0ms'
+  const sequentialDelay = winningIndex !== undefined ? `${winningIndex * WIN_ANIMATION_DELAY_MS}ms` : '0ms'
 
   return (
     <div

@@ -20,8 +20,17 @@ export function Cell({
   player,
   isWinning = false,
   isLast = false,
+  row,
+  col,
   winningIndex,
 }: CellProps) {
+  const getCellLabel = (): string => {
+    if (!player) return `Empty cell at row ${row + 1}, column ${col + 1}`
+    const playerName = player === 1 ? 'Red' : 'Yellow'
+    const winningText = isWinning ? ', part of winning line' : ''
+    return `${playerName} disc at row ${row + 1}, column ${col + 1}${winningText}`
+  }
+
   return (
     <div
       className={cn(
@@ -30,6 +39,8 @@ export function Cell({
         'p-1 sm:p-1.5 md:p-2',
         'bg-blue-600 shadow-inner transition-all'
       )}
+      role="gridcell"
+      aria-label={getCellLabel()}
     >
       <Disc
         player={player}

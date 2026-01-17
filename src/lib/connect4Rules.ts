@@ -299,16 +299,14 @@ export function hasNInARow(board: Board, player: Player, n: number): boolean {
 }
 
 /**
- * Pretty prints the board for debugging (development only)
+ * Converts board to a string representation for debugging
+ * Returns the board as a formatted string without logging
  */
-export function printBoard(board: Board): void {
-  // Only log in development mode - this will be tree-shaken out of production builds
-  if (import.meta.env.DEV) {
-    console.log('\n  0 1 2 3 4 5 6')
-    board.forEach((row, i) => {
-      const rowStr = row.map(cell => (cell === null ? '.' : cell)).join(' ')
-      console.log(`${i} ${rowStr}`)
-    })
-    console.log()
-  }
+export function boardToString(board: Board): string {
+  const header = '  0 1 2 3 4 5 6'
+  const rows = board.map((row, i) => {
+    const rowStr = row.map(cell => (cell === null ? '.' : cell)).join(' ')
+    return `${i} ${rowStr}`
+  })
+  return [header, ...rows].join('\n')
 }

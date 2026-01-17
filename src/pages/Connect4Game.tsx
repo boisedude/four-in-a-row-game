@@ -19,6 +19,7 @@ import { useGameAudio } from '@/hooks/useGameAudio'
 import { useCharacterSelection } from '@/hooks/useCharacterSelection'
 import { useBentleyStats } from '@/hooks/useBentleyStats'
 import { useMainSiteBentleyStats } from '@/hooks/useMainSiteBentleyStats'
+import { TUTORIAL_SHOW_DELAY_MS, VICTORY_DIALOG_DELAY_MS } from '@/lib/constants'
 import type { Difficulty } from '@/types/connect4.types'
 import type { CharacterId } from '@shared/characters'
 import { cn } from '@/lib/utils'
@@ -59,7 +60,7 @@ export function Connect4Game() {
     if (!hasCompletedTutorial) {
       const timer = setTimeout(() => {
         setShowTutorial(true)
-      }, 500)
+      }, TUTORIAL_SHOW_DELAY_MS)
       return () => clearTimeout(timer)
     }
   }, [hasCompletedTutorial])
@@ -188,7 +189,7 @@ export function Connect4Game() {
       // Show dialog after a brief delay
       setTimeout(() => {
         setShowVictoryDialog(true)
-      }, 800)
+      }, VICTORY_DIALOG_DELAY_MS)
     } else {
       // Reset the flag when game is playing (new game started)
       gameEndHandledRef.current = false
@@ -211,11 +212,6 @@ export function Connect4Game() {
     startNewGame('pvc', gameState.difficulty)
   }
 
-  const handleDifficultyChange = (difficulty: Difficulty) => {
-    changeDifficulty(difficulty)
-    startNewGame('pvc', difficulty)
-  }
-
   const handleCharacterChange = (characterId: CharacterId) => {
     selectCharacter(characterId)
     // Map character to difficulty
@@ -235,10 +231,11 @@ export function Connect4Game() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
       {/* Return to Arcade Button - Fixed position */}
-      <div className="fixed left-4 top-4 z-10">
+      <nav className="fixed left-4 top-4 z-10" aria-label="Main navigation">
         <a
           href="https://www.mcooper.com/arcade"
           className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:bg-blue-700 hover:shadow-xl"
+          aria-label="Return to Arcade homepage"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -255,7 +252,7 @@ export function Connect4Game() {
           </svg>
           Return to Arcade
         </a>
-      </div>
+      </nav>
 
       {/* Audio Controls - Fixed position */}
       <div className="fixed right-4 top-4 z-10">
@@ -284,7 +281,12 @@ export function Connect4Game() {
 
         {/* Game Status */}
         {gameState.status === 'playing' && (
-          <div className="text-center animate-in fade-in duration-300">
+          <div
+            className="text-center animate-in fade-in duration-300"
+            role="status"
+            aria-live="polite"
+            aria-label={`Current turn: ${currentPlayerName}`}
+          >
             <div className="flex items-center justify-center gap-3">
               {/* Player indicator disc */}
               <div
@@ -326,8 +328,6 @@ export function Connect4Game() {
 
         {/* Game Controls */}
         <GameControls
-          difficulty={gameState.difficulty}
-          onDifficultyChange={handleDifficultyChange}
           onNewGame={handleNewGame}
           onShowLeaderboard={() => setShowLeaderboard(true)}
           onShowHelp={() => setShowHowToPlay(true)}
@@ -339,7 +339,10 @@ export function Connect4Game() {
         />
 
         {/* Move Counter */}
-        <div className="text-center text-sm text-muted-foreground">
+        <div
+          className="text-center text-sm text-muted-foreground"
+          aria-label={`Total moves played: ${gameState.moveHistory.length}`}
+        >
           Moves: {gameState.moveHistory.length}
         </div>
 
@@ -351,7 +354,6 @@ export function Connect4Game() {
           onNewGame={handleNewGame}
           onClose={() => setShowVictoryDialog(false)}
           isDraw={gameState.status === 'draw'}
-          difficulty={gameState.difficulty}
           character={character}
         />
 

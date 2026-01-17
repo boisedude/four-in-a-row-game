@@ -41,6 +41,16 @@ export function Column({
     }
   }
 
+  const getColumnAriaLabel = (): string => {
+    if (isColumnFull) {
+      return `Column ${colIndex + 1}, full`
+    }
+    if (disabled) {
+      return `Column ${colIndex + 1}, waiting for opponent`
+    }
+    return `Drop disc in column ${colIndex + 1}`
+  }
+
   return (
     <div className="flex flex-col gap-1 sm:gap-2">
       {/* Hover indicator with enhanced preview disc */}
@@ -75,7 +85,8 @@ export function Column({
           isColumnFull && 'cursor-not-allowed',
           isHovered && !disabled && !isColumnFull && 'bg-blue-600/10 scale-102'
         )}
-        aria-label={`Column ${colIndex + 1}`}
+        aria-label={getColumnAriaLabel()}
+        aria-disabled={disabled || isColumnFull}
       >
         {Array.from({ length: ROWS }).map((_, rowIndex) => {
           const player = cells[rowIndex]

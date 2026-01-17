@@ -337,7 +337,6 @@ For Hostinger-specific issues:
 
 For game code issues:
 
-- Check CLAUDE.md for development instructions
 - Review this deployment guide
 
 ---

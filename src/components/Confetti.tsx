@@ -3,8 +3,20 @@
  * Animated confetti particles for victory celebrations
  */
 
-import { useEffect, useState } from 'react'
+import { useMemo } from 'react'
 import { cn } from '@/lib/utils'
+import { CONFETTI_MIN_DURATION_S, CONFETTI_DURATION_VARIANCE_S, CONFETTI_PARTICLE_COUNT } from '@/lib/constants'
+
+const CONFETTI_COLORS = [
+  '#FFD700', // Gold
+  '#FF6B6B', // Red
+  '#4ECDC4', // Cyan
+  '#45B7D1', // Blue
+  '#FFA07A', // Light Salmon
+  '#98D8C8', // Mint
+  '#F7DC6F', // Yellow
+  '#BB8FCE', // Purple
+]
 
 interface ConfettiParticle {
   id: number
@@ -21,35 +33,28 @@ interface ConfettiProps {
   particleCount?: number
 }
 
-export function Confetti({ active = true, particleCount = 50 }: ConfettiProps) {
-  const [particles, setParticles] = useState<ConfettiParticle[]>([])
+/**
+ * Generates confetti particles with random properties
+ */
+function generateParticles(count: number): ConfettiParticle[] {
+  return Array.from({ length: count }, (_, i) => ({
+    id: i,
+    left: Math.random() * 100,
+    delay: Math.random() * 0.5,
+    duration: CONFETTI_MIN_DURATION_S + Math.random() * CONFETTI_DURATION_VARIANCE_S,
+    color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+    rotation: Math.random() * 720,
+    size: 6 + Math.random() * 8,
+  }))
+}
 
-  useEffect(() => {
-    if (!active) return
-
-    const colors = [
-      '#FFD700', // Gold
-      '#FF6B6B', // Red
-      '#4ECDC4', // Cyan
-      '#45B7D1', // Blue
-      '#FFA07A', // Light Salmon
-      '#98D8C8', // Mint
-      '#F7DC6F', // Yellow
-      '#BB8FCE', // Purple
-    ]
-
-    const newParticles: ConfettiParticle[] = Array.from({ length: particleCount }, (_, i) => ({
-      id: i,
-      left: Math.random() * 100,
-      delay: Math.random() * 0.5,
-      duration: 1.5 + Math.random() * 1,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      rotation: Math.random() * 720,
-      size: 6 + Math.random() * 8,
-    }))
-
-    setParticles(newParticles)
-  }, [active, particleCount])
+export function Confetti({ active = true, particleCount = CONFETTI_PARTICLE_COUNT }: ConfettiProps) {
+  // Generate particles once when component mounts or count changes
+  // Using useMemo instead of useEffect + setState to avoid the ESLint warning
+  const particles = useMemo(
+    () => (active ? generateParticles(particleCount) : []),
+    [active, particleCount]
+  )
 
   if (!active) return null
 

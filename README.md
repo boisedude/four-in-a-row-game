@@ -16,8 +16,6 @@ Four in a Row is a classic strategy game where you compete against Coop, an AI o
 
 Created by M. Cooper for [www.mcooper.com](https://www.mcooper.com)
 
-Built with assistance from [Claude](https://claude.ai)
-
 ---
 
 ## Features
@@ -220,8 +218,6 @@ Copyright (c) 2025 M. Cooper
 ## Credits
 
 **Created by:** M. Cooper for [www.mcooper.com](https://www.mcooper.com)
-
-**Built with assistance from:** [Claude](https://claude.ai)
 
 **Character Names:** Coop and Bentley are named after the creator's dogs!
 

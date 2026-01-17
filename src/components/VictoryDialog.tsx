@@ -3,6 +3,7 @@
  * Shows game result and statistics with MC graphics
  */
 
+import { useMemo } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -14,8 +15,16 @@ import {
 import { Button } from './ui/button'
 import { Confetti } from './Confetti'
 import { cn } from '@/lib/utils'
-import type { Player, Difficulty } from '@/types/connect4.types'
+import type { Player } from '@/types/connect4.types'
 import type { Character } from '@shared/characters'
+
+/**
+ * Selects a random item from an array
+ * Extracted as a utility to avoid calling Math.random during render
+ */
+function selectRandomItem<T>(items: T[]): T {
+  return items[Math.floor(Math.random() * items.length)]
+}
 
 interface VictoryDialogProps {
   open: boolean
@@ -24,7 +33,6 @@ interface VictoryDialogProps {
   onNewGame: () => void
   onClose: () => void
   isDraw: boolean
-  difficulty: Difficulty
   character: Character
 }
 
@@ -35,30 +43,25 @@ export function VictoryDialog({
   onNewGame,
   onClose,
   isDraw,
-  difficulty: _difficulty,
   character,
 }: VictoryDialogProps) {
-  // Get message from character catchphrases
-  const getVictoryMessage = () => {
+  // Memoize the victory message to avoid re-randomizing on each render
+  // The message should only change when the dialog opens with new game results
+  const victoryMessage = useMemo(() => {
     if (isDraw) {
-      // For draws, use a generic message or gameStart phrases
       const drawMessages = [
         'The board is full! No one wins this time.',
         `${character.name} respects the stalemate. Rematch?`,
       ]
-      return drawMessages[Math.floor(Math.random() * drawMessages.length)]
+      return selectRandomItem(drawMessages)
     }
 
     if (winner === 1) {
-      // Player won - use character's playerWins catchphrases
-      const phrases = character.catchphrases.playerWins
-      return phrases[Math.floor(Math.random() * phrases.length)]
+      return selectRandomItem(character.catchphrases.playerWins)
     } else {
-      // Character won - use character's characterWins catchphrases
-      const phrases = character.catchphrases.characterWins
-      return phrases[Math.floor(Math.random() * phrases.length)]
+      return selectRandomItem(character.catchphrases.characterWins)
     }
-  }
+  }, [isDraw, winner, character.name, character.catchphrases.playerWins, character.catchphrases.characterWins])
 
   // Get appropriate character image
   const getCharacterImage = () => {
@@ -104,7 +107,7 @@ export function VictoryDialog({
             {getDialogTitle()}
           </DialogTitle>
           <DialogDescription className="text-center text-base animate-in fade-in slide-in-from-top-2 duration-500 delay-100">
-            {getVictoryMessage()}
+            {victoryMessage}
           </DialogDescription>
         </DialogHeader>
 

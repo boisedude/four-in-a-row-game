@@ -5,12 +5,10 @@
 
 import { Button } from './ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
-import type { Difficulty, GameMode } from '@/types/connect4.types'
+import type { GameMode } from '@/types/connect4.types'
 import type { CharacterId } from '@shared/characters'
 
 interface GameControlsProps {
-  difficulty: Difficulty
-  onDifficultyChange: (difficulty: Difficulty) => void
   onNewGame: () => void
   onShowLeaderboard: () => void
   onShowHelp?: () => void
@@ -22,8 +20,6 @@ interface GameControlsProps {
 }
 
 export function GameControls({
-  difficulty: _difficulty,
-  onDifficultyChange: _onDifficultyChange,
   onNewGame,
   onShowLeaderboard,
   onShowHelp,

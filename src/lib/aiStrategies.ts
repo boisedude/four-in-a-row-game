@@ -4,9 +4,20 @@
  */
 
 import type { Board, Player, Difficulty } from '@/types/connect4.types'
+import { ROWS, COLUMNS } from '@/types/connect4.types'
 import { getValidMoves, simulateMove, checkWinner, isBoardFull } from './connect4Rules'
-// Import COLUMNS if needed for future features
-// import { COLUMNS } from '@/types/connect4.types'
+import {
+  AI_MINIMAX_DEPTH,
+  SCORE_WIN,
+  SCORE_FOUR_IN_ROW,
+  SCORE_THREE_IN_ROW,
+  SCORE_TWO_IN_ROW,
+  SCORE_OPPONENT_THREE,
+  SCORE_OPPONENT_TWO,
+  SCORE_CENTER_COLUMN_BONUS,
+  CENTER_COLUMN,
+  WIN_LENGTH,
+} from './constants'
 
 /**
  * Gets the AI's move based on difficulty level
@@ -82,7 +93,6 @@ function getGreedyMove(board: Board, player: Player, validMoves: number[]): numb
  * Hard AI: Minimax with alpha-beta pruning
  */
 function getMinimaxMove(board: Board, player: Player): number {
-  const depth = 6 // Search depth
   let bestMove = -1
   let bestScore = -Infinity
 
@@ -93,7 +103,7 @@ function getMinimaxMove(board: Board, player: Player): number {
 
   for (const col of orderedMoves) {
     const newBoard = simulateMove(board, col, player)
-    const score = minimax(newBoard, depth - 1, -Infinity, Infinity, false, player)
+    const score = minimax(newBoard, AI_MINIMAX_DEPTH - 1, -Infinity, Infinity, false, player)
 
     if (score > bestScore) {
       bestScore = score
@@ -119,8 +129,8 @@ function minimax(
   const winner = checkWinner(board).winner
 
   // Terminal states
-  if (winner === aiPlayer) return 10000 + depth // Prefer faster wins
-  if (winner === opponent) return -10000 - depth // Avoid faster losses
+  if (winner === aiPlayer) return SCORE_WIN + depth // Prefer faster wins
+  if (winner === opponent) return -SCORE_WIN - depth // Avoid faster losses
   if (isBoardFull(board)) return 0 // Draw
 
   // Depth limit reached
@@ -171,8 +181,8 @@ function evaluateBoard(board: Board, player: Player): number {
 
   // Evaluate all possible 4-cell windows
   // Horizontal
-  for (let row = 0; row < 6; row++) {
-    for (let col = 0; col < 4; col++) {
+  for (let row = 0; row < ROWS; row++) {
+    for (let col = 0; col <= COLUMNS - WIN_LENGTH; col++) {
       const window = [
         board[row][col],
         board[row][col + 1],
@@ -184,8 +194,8 @@ function evaluateBoard(board: Board, player: Player): number {
   }
 
   // Vertical
-  for (let col = 0; col < 7; col++) {
-    for (let row = 0; row < 3; row++) {
+  for (let col = 0; col < COLUMNS; col++) {
+    for (let row = 0; row <= ROWS - WIN_LENGTH; row++) {
       const window = [
         board[row][col],
         board[row + 1][col],
@@ -197,8 +207,8 @@ function evaluateBoard(board: Board, player: Player): number {
   }
 
   // Diagonal (down-right)
-  for (let row = 0; row < 3; row++) {
-    for (let col = 0; col < 4; col++) {
+  for (let row = 0; row <= ROWS - WIN_LENGTH; row++) {
+    for (let col = 0; col <= COLUMNS - WIN_LENGTH; col++) {
       const window = [
         board[row][col],
         board[row + 1][col + 1],
@@ -210,8 +220,8 @@ function evaluateBoard(board: Board, player: Player): number {
   }
 
   // Diagonal (down-left)
-  for (let row = 0; row < 3; row++) {
-    for (let col = 3; col < 7; col++) {
+  for (let row = 0; row <= ROWS - WIN_LENGTH; row++) {
+    for (let col = WIN_LENGTH - 1; col < COLUMNS; col++) {
       const window = [
         board[row][col],
         board[row + 1][col - 1],
@@ -223,9 +233,8 @@ function evaluateBoard(board: Board, player: Player): number {
   }
 
   // Center column preference
-  const centerColumn = 3
-  const centerCount = board.filter(row => row[centerColumn] === player).length
-  score += centerCount * 3
+  const centerCount = board.filter(row => row[CENTER_COLUMN] === player).length
+  score += centerCount * SCORE_CENTER_COLUMN_BONUS
 
   return score
 }
@@ -241,13 +250,13 @@ function evaluateWindow(window: (Player | null)[], player: Player, opponent: Pla
   const emptyCount = window.filter(cell => cell === null).length
 
   // Scoring based on patterns
-  if (playerCount === 4) score += 100
-  else if (playerCount === 3 && emptyCount === 1) score += 5
-  else if (playerCount === 2 && emptyCount === 2) score += 2
+  if (playerCount === WIN_LENGTH) score += SCORE_FOUR_IN_ROW
+  else if (playerCount === 3 && emptyCount === 1) score += SCORE_THREE_IN_ROW
+  else if (playerCount === 2 && emptyCount === 2) score += SCORE_TWO_IN_ROW
 
   if (opponentCount === 3 && emptyCount === 1)
-    score -= 4 // Block opponent threats
-  else if (opponentCount === 2 && emptyCount === 2) score -= 1
+    score -= SCORE_OPPONENT_THREE // Block opponent threats
+  else if (opponentCount === 2 && emptyCount === 2) score -= SCORE_OPPONENT_TWO
 
   return score
 }
@@ -257,6 +266,6 @@ function evaluateWindow(window: (Player | null)[], player: Player, opponent: Pla
  * Helps with alpha-beta pruning efficiency
  */
 function orderMovesByPreference(moves: number[]): number[] {
-  const centerDistance = (col: number) => Math.abs(col - 3)
+  const centerDistance = (col: number) => Math.abs(col - CENTER_COLUMN)
   return [...moves].sort((a, b) => centerDistance(a) - centerDistance(b))
 }

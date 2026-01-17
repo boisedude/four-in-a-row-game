@@ -7,8 +7,7 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import type { GameState, Difficulty, GameMode } from '@/types/connect4.types'
 import { createInitialGameState, makeMove, isValidMove } from '@/lib/connect4Rules'
 import { getAIMove } from '@/lib/aiStrategies'
-
-const AI_MOVE_DELAY = 500 // ms
+import { AI_MOVE_DELAY_MS, DISC_DROP_ANIMATION_MS } from '@/lib/constants'
 
 export function useConnect4Game(initialDifficulty: Difficulty = 'medium') {
   const [gameState, setGameState] = useState<GameState>(() =>
@@ -55,21 +54,21 @@ export function useConnect4Game(initialDifficulty: Difficulty = 'medium') {
               setGameState(prevState => {
                 try {
                   return makeMove(prevState, aiColumn)
-                } catch (error) {
-                  console.error('Move execution failed:', error)
+                } catch {
+                  // Move failed - return unchanged state
                   return prevState
                 }
               })
               setIsAnimating(false)
               animationTimeoutRef.current = null
-            }, 100)
+            }, DISC_DROP_ANIMATION_MS)
           }
-        } catch (error) {
-          console.error('AI move failed:', error)
+        } catch {
+          // AI move calculation failed - will retry on next render
         } finally {
           aiMoveScheduledRef.current = false
         }
-      }, AI_MOVE_DELAY)
+      }, AI_MOVE_DELAY_MS)
     }
 
     return () => {
@@ -94,7 +93,6 @@ export function useConnect4Game(initialDifficulty: Difficulty = 'medium') {
       }
 
       if (!isValidMove(gameState.board, column)) {
-        console.warn('Invalid move attempted:', column)
         return
       }
 
@@ -106,16 +104,16 @@ export function useConnect4Game(initialDifficulty: Difficulty = 'medium') {
           setGameState(prevState => {
             try {
               return makeMove(prevState, column)
-            } catch (error) {
-              console.error('Move execution failed:', error)
+            } catch {
+              // Move failed - return unchanged state
               return prevState
             }
           })
           setIsAnimating(false)
           animationTimeoutRef.current = null
-        }, 100)
-      } catch (error) {
-        console.error('Error handling move:', error)
+        }, DISC_DROP_ANIMATION_MS)
+      } catch {
+        // Error during move setup - reset animation state
         setIsAnimating(false)
       }
     },

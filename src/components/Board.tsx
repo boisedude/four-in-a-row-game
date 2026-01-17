@@ -33,7 +33,11 @@ export function Board({
   const columns = Array.from({ length: COLUMNS }, (_, colIndex) => board.map(row => row[colIndex]))
 
   return (
-    <div className="relative animate-in fade-in zoom-in-95 duration-700 delay-100 w-full flex justify-center px-2 sm:px-4">
+    <div
+      className="relative animate-in fade-in zoom-in-95 duration-700 delay-100 w-full flex justify-center px-2 sm:px-4"
+      role="grid"
+      aria-label="Connect 4 game board with 7 columns and 6 rows"
+    >
       <div
         className={cn(
           'relative flex',

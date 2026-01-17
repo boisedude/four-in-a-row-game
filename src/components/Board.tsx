@@ -17,6 +17,7 @@ interface BoardProps {
   onColumnClick: (col: number) => void
   disabled: boolean
   currentPlayer: Player
+  selectedColumn?: number | null
 }
 
 export function Board({
@@ -26,6 +27,7 @@ export function Board({
   onColumnClick,
   disabled,
   currentPlayer,
+  selectedColumn,
 }: BoardProps) {
   const [hoveredColumn, setHoveredColumn] = useState<number | null>(null)
 
@@ -68,7 +70,7 @@ export function Board({
             lastMove={lastMove}
             onColumnClick={onColumnClick}
             disabled={disabled}
-            isHovered={hoveredColumn === colIndex}
+            isHovered={hoveredColumn === colIndex || selectedColumn === colIndex}
             onMouseEnter={() => setHoveredColumn(colIndex)}
             onMouseLeave={() => setHoveredColumn(null)}
             currentPlayer={currentPlayer}

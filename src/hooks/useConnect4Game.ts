@@ -61,11 +61,15 @@ export function useConnect4Game(initialDifficulty: Difficulty = 'medium') {
               })
               setIsAnimating(false)
               animationTimeoutRef.current = null
+              // Reset the ref after animation completes to prevent duplicate AI moves
+              aiMoveScheduledRef.current = false
             }, DISC_DROP_ANIMATION_MS)
+          } else {
+            // Move was invalid - reset the ref so AI can retry
+            aiMoveScheduledRef.current = false
           }
         } catch {
-          // AI move calculation failed - will retry on next render
-        } finally {
+          // AI move calculation failed - reset ref so it will retry on next render
           aiMoveScheduledRef.current = false
         }
       }, AI_MOVE_DELAY_MS)

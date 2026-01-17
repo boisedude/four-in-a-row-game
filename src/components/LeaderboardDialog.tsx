@@ -10,24 +10,25 @@ interface LeaderboardDialogProps {
   open: boolean
   onClose: () => void
   stats: LeaderboardEntry
+  characterName?: string
 }
 
-export function LeaderboardDialog({ open, onClose, stats }: LeaderboardDialogProps) {
+export function LeaderboardDialog({ open, onClose, stats, characterName = 'Coop' }: LeaderboardDialogProps) {
   const winRate = stats.totalGames > 0 ? ((stats.wins / stats.totalGames) * 100).toFixed(1) : '0.0'
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>📊 Your Record vs Coop</DialogTitle>
-          <DialogDescription>How well can you beat Coop?</DialogDescription>
+          <DialogTitle>Your Record vs {characterName}</DialogTitle>
+          <DialogDescription>How well can you beat {characterName}?</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <StatRow label="Total Games" value={stats.totalGames} />
-            <StatRow label="Wins vs Coop" value={stats.wins} highlight="green" />
-            <StatRow label="Losses to Coop" value={stats.losses} highlight="red" />
+            <StatRow label={`Wins vs ${characterName}`} value={stats.wins} highlight="green" />
+            <StatRow label={`Losses to ${characterName}`} value={stats.losses} highlight="red" />
             <StatRow label="Draws" value={stats.draws} />
             <StatRow label="Win Rate" value={`${winRate}%`} />
           </div>

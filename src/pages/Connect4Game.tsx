@@ -51,6 +51,7 @@ export function Connect4Game() {
   const [showHowToPlay, setShowHowToPlay] = useState(false)
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false)
   const [showTutorial, setShowTutorial] = useState(false)
+  const [selectedColumn, setSelectedColumn] = useState<number | null>(null)
   const [hasCompletedTutorial, setHasCompletedTutorial] = useState(() => {
     return localStorage.getItem('connect4-tutorial-completed') === 'true'
   })
@@ -86,7 +87,31 @@ export function Connect4Game() {
         return
       }
 
-      // Only handle during active gameplay
+      // Global shortcuts (work even when not player's turn)
+      switch (e.key.toLowerCase()) {
+        case 'n':
+          e.preventDefault()
+          startNewGame('pvc', gameState.difficulty)
+          return
+        case 'h':
+          e.preventDefault()
+          setShowHowToPlay(true)
+          return
+        case 'l':
+          e.preventDefault()
+          setShowLeaderboard(true)
+          return
+        case 'm':
+          e.preventDefault()
+          toggleMute()
+          return
+        case '?':
+          e.preventDefault()
+          setShowKeyboardShortcuts(true)
+          return
+      }
+
+      // Only handle gameplay keys during active gameplay and player's turn
       if (gameState.status !== 'playing' || isAnimating || gameState.currentPlayer === 2) {
         return
       }
@@ -99,27 +124,28 @@ export function Connect4Game() {
         return
       }
 
-      // Other shortcuts
-      switch (e.key.toLowerCase()) {
-        case 'n':
+      // Arrow key navigation for column selection
+      switch (e.key) {
+        case 'ArrowLeft':
           e.preventDefault()
-          startNewGame('pvc', gameState.difficulty)
+          setSelectedColumn(prev => {
+            if (prev === null) return 3 // Start in middle
+            return prev > 0 ? prev - 1 : 6 // Wrap around
+          })
           break
-        case 'h':
+        case 'ArrowRight':
           e.preventDefault()
-          setShowHowToPlay(true)
+          setSelectedColumn(prev => {
+            if (prev === null) return 3 // Start in middle
+            return prev < 6 ? prev + 1 : 0 // Wrap around
+          })
           break
-        case 'l':
+        case 'Enter':
+        case ' ':
           e.preventDefault()
-          setShowLeaderboard(true)
-          break
-        case 'm':
-          e.preventDefault()
-          toggleMute()
-          break
-        case '?':
-          e.preventDefault()
-          setShowKeyboardShortcuts(true)
+          if (selectedColumn !== null) {
+            handlePlayerMove(selectedColumn)
+          }
           break
       }
     }
@@ -137,6 +163,7 @@ export function Connect4Game() {
     showHowToPlay,
     showKeyboardShortcuts,
     showTutorial,
+    selectedColumn,
   ])
 
   // Play sound on move
@@ -324,6 +351,7 @@ export function Connect4Game() {
           onColumnClick={handlePlayerMove}
           disabled={isAnimating || gameState.status !== 'playing' || gameState.currentPlayer === 2}
           currentPlayer={gameState.currentPlayer}
+          selectedColumn={gameState.status === 'playing' && gameState.currentPlayer === 1 ? selectedColumn : null}
         />
 
         {/* Game Controls */}
@@ -362,6 +390,7 @@ export function Connect4Game() {
           open={showLeaderboard}
           onClose={() => setShowLeaderboard(false)}
           stats={stats}
+          characterName={character.name}
         />
 
         {/* How to Play Dialog */}

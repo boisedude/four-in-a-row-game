@@ -19,7 +19,7 @@ import { useGameAudio } from '@/hooks/useGameAudio'
 import { useCharacterSelection } from '@/hooks/useCharacterSelection'
 import { useBentleyStats } from '@/hooks/useBentleyStats'
 import { useMainSiteBentleyStats } from '@/hooks/useMainSiteBentleyStats'
-import { TUTORIAL_SHOW_DELAY_MS, VICTORY_DIALOG_DELAY_MS } from '@/lib/constants'
+import { TUTORIAL_SHOW_DELAY_MS, VICTORY_DIALOG_DELAY_MS, ARCADE_URL, STORAGE_KEY_TUTORIAL_COMPLETED } from '@/lib/constants'
 import type { Difficulty } from '@/types/connect4.types'
 import type { CharacterId } from '@shared/characters'
 import { cn } from '@/lib/utils'
@@ -53,7 +53,7 @@ export function Connect4Game() {
   const [showTutorial, setShowTutorial] = useState(false)
   const [selectedColumn, setSelectedColumn] = useState<number | null>(null)
   const [hasCompletedTutorial, setHasCompletedTutorial] = useState(() => {
-    return localStorage.getItem('connect4-tutorial-completed') === 'true'
+    return localStorage.getItem(STORAGE_KEY_TUTORIAL_COMPLETED) === 'true'
   })
 
   // Show tutorial on first visit
@@ -69,7 +69,11 @@ export function Connect4Game() {
   // Handle tutorial completion
   const handleTutorialComplete = useCallback(() => {
     setHasCompletedTutorial(true)
-    localStorage.setItem('connect4-tutorial-completed', 'true')
+    try {
+      localStorage.setItem(STORAGE_KEY_TUTORIAL_COMPLETED, 'true')
+    } catch {
+      // localStorage may be unavailable or full - tutorial will show again on next visit
+    }
   }, [])
 
   // Keyboard controls
@@ -260,7 +264,7 @@ export function Connect4Game() {
       {/* Return to Arcade Button - Fixed position */}
       <nav className="fixed left-4 top-4 z-10" aria-label="Main navigation">
         <a
-          href="https://www.mcooper.com/arcade"
+          href={ARCADE_URL}
           className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:bg-blue-700 hover:shadow-xl"
           aria-label="Return to Arcade homepage"
         >
@@ -318,7 +322,7 @@ export function Connect4Game() {
               {/* Player indicator disc */}
               <div
                 className={cn(
-                  'h-6 w-6 rounded-full shadow-md animate-turn-pulse',
+                  'relative h-6 w-6 rounded-full shadow-md animate-turn-pulse',
                   gameState.currentPlayer === 1
                     ? 'bg-gradient-to-br from-red-500 to-red-600 shadow-red-500/50'
                     : 'bg-gradient-to-br from-yellow-400 to-yellow-500 shadow-yellow-500/50'
@@ -333,6 +337,9 @@ export function Connect4Game() {
                 )}
               >
                 {currentPlayerName}
+                <span className="sr-only">
+                  {gameState.currentPlayer === 1 ? ' - Your turn (Red disc)' : ` - ${character.name}'s turn (Yellow disc)`}
+                </span>
               </p>
             </div>
             {isAnimating && (

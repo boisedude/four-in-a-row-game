@@ -4,6 +4,7 @@
  */
 
 import { useState, useCallback, useEffect } from 'react'
+import { STORAGE_KEY_BENTLEY_STATS } from '@/lib/constants'
 
 interface BentleyStats {
   gamesPlayed: number
@@ -15,8 +16,6 @@ interface BentleyStats {
   totalMoves: number
   fastestWin: number | null // Lowest move count for a win
 }
-
-const STORAGE_KEY = 'connect4-bentley-stats'
 
 /**
  * Type guard to validate BentleyStats structure
@@ -50,7 +49,7 @@ function isValidBentleyStats(data: unknown): data is BentleyStats {
 
 function getInitialStats(): BentleyStats {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY)
+    const stored = localStorage.getItem(STORAGE_KEY_BENTLEY_STATS)
     if (stored) {
       const data = JSON.parse(stored)
 
@@ -59,13 +58,13 @@ function getInitialStats(): BentleyStats {
         return data
       } else {
         // Invalid stats data - clear corrupted data and use defaults
-        localStorage.removeItem(STORAGE_KEY)
+        localStorage.removeItem(STORAGE_KEY_BENTLEY_STATS)
       }
     }
   } catch {
     // Failed to load stats - clear corrupted data
     try {
-      localStorage.removeItem(STORAGE_KEY)
+      localStorage.removeItem(STORAGE_KEY_BENTLEY_STATS)
     } catch {
       // Ignore errors when trying to clear
     }
@@ -88,7 +87,11 @@ export function useBentleyStats() {
 
   // Save stats to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(stats))
+    try {
+      localStorage.setItem(STORAGE_KEY_BENTLEY_STATS, JSON.stringify(stats))
+    } catch {
+      // localStorage may be unavailable or full - stats won't persist
+    }
   }, [stats])
 
   const recordWin = useCallback((moveCount: number) => {
@@ -140,7 +143,11 @@ export function useBentleyStats() {
       fastestWin: null,
     }
     setStats(defaultStats)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultStats))
+    try {
+      localStorage.setItem(STORAGE_KEY_BENTLEY_STATS, JSON.stringify(defaultStats))
+    } catch {
+      // localStorage may be unavailable or full - reset won't persist
+    }
   }, [])
 
   return {

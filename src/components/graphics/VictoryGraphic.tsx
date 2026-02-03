@@ -4,12 +4,14 @@
  * Designed by M. Cooper for www.mcooper.com
  */
 
+import { memo } from 'react'
+
 interface VictoryGraphicProps {
   size?: number
   className?: string
 }
 
-export function VictoryGraphic({ size = 150, className }: VictoryGraphicProps) {
+export const VictoryGraphic = memo(function VictoryGraphic({ size = 150, className }: VictoryGraphicProps) {
   return (
     <svg
       width={size}
@@ -197,4 +199,4 @@ export function VictoryGraphic({ size = 150, className }: VictoryGraphicProps) {
       </g>
     </svg>
   )
-}
+})

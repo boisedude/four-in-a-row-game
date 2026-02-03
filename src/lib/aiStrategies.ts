@@ -16,6 +16,8 @@ import {
   SCORE_OPPONENT_TWO,
   SCORE_CENTER_COLUMN_BONUS,
   CENTER_COLUMN,
+  CENTER_REGION_MIN,
+  CENTER_REGION_MAX,
   WIN_LENGTH,
 } from './constants'
 
@@ -78,7 +80,7 @@ function getGreedyMove(board: Board, player: Player, validMoves: number[]): numb
   }
 
   // 3. Prefer center columns (they offer more winning possibilities)
-  const centerMoves = validMoves.filter(col => col >= 2 && col <= 4)
+  const centerMoves = validMoves.filter(col => col >= CENTER_REGION_MIN && col <= CENTER_REGION_MAX)
   if (centerMoves.length > 0) {
     // Among center moves, prefer the actual center
     if (centerMoves.includes(3)) return 3

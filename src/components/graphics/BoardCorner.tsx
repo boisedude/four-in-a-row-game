@@ -4,13 +4,15 @@
  * Designed by M. Cooper for www.mcooper.com
  */
 
+import { memo } from 'react'
+
 interface BoardCornerProps {
   position: 'topLeft' | 'topRight' | 'bottomLeft' | 'bottomRight'
   size?: number
   className?: string
 }
 
-export function BoardCorner({ position, size = 40, className }: BoardCornerProps) {
+export const BoardCorner = memo(function BoardCorner({ position, size = 40, className }: BoardCornerProps) {
   // Calculate rotation based on position
   const rotations = {
     topLeft: 0,
@@ -138,4 +140,4 @@ export function BoardCorner({ position, size = 40, className }: BoardCornerProps
       />
     </svg>
   )
-}
+})

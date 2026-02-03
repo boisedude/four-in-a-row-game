@@ -4,12 +4,14 @@
  * Designed by M. Cooper for www.mcooper.com
  */
 
+import { memo } from 'react'
+
 interface BoardPatternProps {
   opacity?: number
   className?: string
 }
 
-export function BoardPattern({ opacity = 0.1, className }: BoardPatternProps) {
+export const BoardPattern = memo(function BoardPattern({ opacity = 0.1, className }: BoardPatternProps) {
   return (
     <svg
       width="100%"
@@ -163,4 +165,4 @@ export function BoardPattern({ opacity = 0.1, className }: BoardPatternProps) {
       </g>
     </svg>
   )
-}
+})

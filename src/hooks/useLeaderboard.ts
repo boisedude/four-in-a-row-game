@@ -5,9 +5,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import type { LeaderboardEntry } from '@/types/connect4.types'
-
-const STORAGE_KEY = 'connect4-leaderboard'
-const DEFAULT_PLAYER_NAME = 'Player'
+import { STORAGE_KEY_LEADERBOARD, DEFAULT_PLAYER_NAME } from '@/lib/constants'
 
 /**
  * Type guard to validate LeaderboardEntry structure
@@ -40,7 +38,7 @@ function isValidLeaderboard(data: unknown): data is LeaderboardEntry {
 
 function getInitialLeaderboard(): LeaderboardEntry {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY)
+    const stored = localStorage.getItem(STORAGE_KEY_LEADERBOARD)
     if (stored) {
       const data = JSON.parse(stored)
 
@@ -49,14 +47,14 @@ function getInitialLeaderboard(): LeaderboardEntry {
         return data
       } else {
         // Invalid leaderboard data - clear corrupted data and use defaults
-        localStorage.removeItem(STORAGE_KEY)
+        localStorage.removeItem(STORAGE_KEY_LEADERBOARD)
       }
     }
   } catch {
     // Failed to load leaderboard - clear corrupted data
     // Clear corrupted data
     try {
-      localStorage.removeItem(STORAGE_KEY)
+      localStorage.removeItem(STORAGE_KEY_LEADERBOARD)
     } catch {
       // Ignore errors when trying to clear
     }
@@ -79,7 +77,7 @@ export function useLeaderboard() {
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(stats))
+      localStorage.setItem(STORAGE_KEY_LEADERBOARD, JSON.stringify(stats))
     } catch {
       // Failed to save leaderboard - localStorage may be full or disabled
     }

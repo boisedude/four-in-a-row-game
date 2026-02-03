@@ -4,7 +4,7 @@
  * Designed by M. Cooper for www.mcooper.com
  */
 
-import { useId } from 'react'
+import { memo, useId } from 'react'
 
 interface DiscGraphicProps {
   style: 'smooth' | 'textured' | 'gem' | 'glossy' | 'metallic'
@@ -14,7 +14,7 @@ interface DiscGraphicProps {
   showBranding?: boolean
 }
 
-export function DiscGraphic({
+export const DiscGraphic = memo(function DiscGraphic({
   style,
   color,
   size = 60,
@@ -254,4 +254,4 @@ export function DiscGraphic({
       <ellipse cx="50" cy="88" rx="35" ry="4" fill="black" opacity="0.15" />
     </svg>
   )
-}
+})

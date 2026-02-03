@@ -64,6 +64,12 @@ export const SCORE_CENTER_COLUMN_BONUS = 3
 /** Center column index (0-indexed) */
 export const CENTER_COLUMN = 3
 
+/** Minimum column index for center region (inclusive) */
+export const CENTER_REGION_MIN = 2
+
+/** Maximum column index for center region (inclusive) */
+export const CENTER_REGION_MAX = 4
+
 /** Number of discs needed to win */
 export const WIN_LENGTH = 4
 
@@ -104,3 +110,36 @@ export const CONFETTI_PARTICLE_COUNT = 50
 
 /** Animation delay multiplier for sequential win animations */
 export const WIN_ANIMATION_DELAY_MS = 100
+
+// ===========================================
+// External URLs
+// ===========================================
+
+/** Main arcade website URL */
+export const ARCADE_URL = 'https://www.mcooper.com/arcade'
+
+/** API base URL for main site integration */
+export const API_BASE_URL = 'https://www.mcooper.com/api'
+
+// ===========================================
+// Storage Keys
+// ===========================================
+
+/** LocalStorage key for leaderboard data */
+export const STORAGE_KEY_LEADERBOARD = 'connect4-leaderboard'
+
+/** LocalStorage key for Bentley stats */
+export const STORAGE_KEY_BENTLEY_STATS = 'connect4-bentley-stats'
+
+/** LocalStorage key for audio muted preference */
+export const STORAGE_KEY_AUDIO_MUTED = 'connect4-audio-muted'
+
+/** LocalStorage key for tutorial completion */
+export const STORAGE_KEY_TUTORIAL_COMPLETED = 'connect4-tutorial-completed'
+
+// ===========================================
+// Default Values
+// ===========================================
+
+/** Default player name for leaderboard */
+export const DEFAULT_PLAYER_NAME = 'Player'

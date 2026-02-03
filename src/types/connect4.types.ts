@@ -58,32 +58,3 @@ export interface LeaderboardEntry {
   fastestWin: number | null // moves to win
   totalGames: number
 }
-
-// Achievement
-export interface Achievement {
-  id: string
-  name: string
-  description: string
-  icon: string
-  tier: 'bronze' | 'silver' | 'gold' | 'platinum'
-  unlocked: boolean
-  unlockedAt?: number
-}
-
-// Achievement progress
-export interface AchievementProgress {
-  firstVictory: boolean
-  perfectColumn: boolean // Win with 4 in same column
-  diagonalMaster: boolean // Win with diagonal
-  speedster: boolean // Win in under 10 moves
-  unstoppable: boolean // 5 win streak
-  legendary: boolean // 10 win streak
-  comebackKing: boolean // Win after being one move from losing
-  tactician: boolean // Beat hard AI
-  perfectGame: boolean // Win without opponent getting more than 2 in a row
-}
-
-// Saved game state
-export interface SavedGame extends GameState {
-  savedAt: number
-}

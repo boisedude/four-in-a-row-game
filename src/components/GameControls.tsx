@@ -40,7 +40,7 @@ export function GameControls({
             value={selectedCharacterId}
             onValueChange={value => onCharacterChange(value as CharacterId)}
           >
-            <SelectTrigger id="character" className="w-56 transition-all hover:scale-105">
+            <SelectTrigger id="character" className="w-40 sm:w-56 transition-all hover:scale-105">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

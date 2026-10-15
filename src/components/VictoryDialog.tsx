@@ -1,9 +1,10 @@
 /**
  * Victory Dialog Component
- * Shows game result and statistics with MC graphics
+ * Character art, a one-line result, one catchphrase, and the record
  */
 
-import { useMemo } from 'react'
+import { useState, useEffect } from 'react'
+import type React from 'react'
 import {
   Dialog,
   DialogContent,
@@ -13,18 +14,8 @@ import {
   DialogTitle,
 } from './ui/dialog'
 import { Button } from './ui/button'
-import { Confetti } from './Confetti'
-import { cn } from '@/lib/utils'
-import type { Player } from '@/types/connect4.types'
+import type { LeaderboardEntry, Player } from '@/types/connect4.types'
 import type { Character } from '@shared/characters'
-
-/**
- * Selects a random item from an array
- * Extracted as a utility to avoid calling Math.random during render
- */
-function selectRandomItem<T>(items: T[]): T {
-  return items[Math.floor(Math.random() * items.length)]
-}
 
 interface VictoryDialogProps {
   open: boolean
@@ -34,7 +25,14 @@ interface VictoryDialogProps {
   onClose: () => void
   isDraw: boolean
   character: Character
+  stats: LeaderboardEntry
 }
+
+const DRAW_LINES = [
+  'The board is full and nobody wins.',
+  'A stalemate. One more game?',
+  'Dead even. Rematch?',
+]
 
 export function VictoryDialog({
   open,
@@ -44,114 +42,56 @@ export function VictoryDialog({
   onClose,
   isDraw,
   character,
+  stats,
 }: VictoryDialogProps) {
-  // Memoize the victory message to avoid re-randomizing on each render
-  // The message should only change when the dialog opens with new game results
-  const victoryMessage = useMemo(() => {
-    if (isDraw) {
-      const drawMessages = [
-        'The board is full! No one wins this time.',
-        `${character.name} respects the stalemate. Rematch?`,
-      ]
-      return selectRandomItem(drawMessages)
-    }
+  const [catchphrase, setCatchphrase] = useState('')
 
-    if (winner === 1) {
-      return selectRandomItem(character.catchphrases.playerWins)
-    } else {
-      return selectRandomItem(character.catchphrases.characterWins)
-    }
-  }, [isDraw, winner, character.name, character.catchphrases.playerWins, character.catchphrases.characterWins])
+  // Math.random() runs in an effect, not during render, to keep render pure
+  useEffect(() => {
+    if (!open) return
+    const lines = isDraw
+      ? DRAW_LINES
+      : winner === 1
+        ? character.catchphrases.playerWins
+        : character.catchphrases.characterWins
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCatchphrase(lines[Math.floor(Math.random() * lines.length)])
+  }, [open, isDraw, winner, character])
 
-  // Get appropriate character image
-  const getCharacterImage = () => {
-    if (isDraw) {
-      return character.avatar
-    }
-    if (winner === 1) {
-      // Player won, show character lose image
-      return character.loseImage
-    } else {
-      // Character won, show character win image
-      return character.winImage
-    }
-  }
-
-  // Get dialog title
-  const getDialogTitle = () => {
-    if (isDraw) {
-      return '🤝 Draw!'
-    }
-    if (winner === 1) {
-      return `You Beat ${character.name}!`
-    } else {
-      return `${character.name} Wins!`
-    }
-  }
+  const art = isDraw ? character.playAgainImage : winner === 1 ? character.loseImage : character.winImage
 
   return (
-    <>
-      {/* Confetti for player victory */}
-      {winner === 1 && <Confetti active={open} particleCount={60} />}
-
-      <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle
-            className={cn(
-              'text-center text-2xl animate-in fade-in slide-in-from-top-2 duration-500',
-              winner === 1 &&
-                'bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-400 bg-clip-text text-transparent bg-[length:200%_auto] animate-victory-shimmer'
-            )}
-          >
-            {getDialogTitle()}
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-sm" hideClose>
+        <DialogHeader className="items-center text-center sm:text-center">
+          <img
+            src={art}
+            alt={character.name}
+            className="mb-2 max-h-44 w-auto object-contain"
+            onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+              e.currentTarget.src = character.avatar
+            }}
+          />
+          <DialogTitle className="text-xl">
+            {isDraw ? 'Draw' : winner === 1 ? `You beat ${character.name}` : `${character.name} won`}
           </DialogTitle>
-          <DialogDescription className="text-center text-base animate-in fade-in slide-in-from-top-2 duration-500 delay-100">
-            {victoryMessage}
-          </DialogDescription>
+          <DialogDescription>{catchphrase}</DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-4 py-4">
-          {/* Character Image */}
-          <div className="relative mx-auto w-full max-w-[200px] h-[200px] overflow-visible flex items-center justify-center">
-            <img
-              src={getCharacterImage()}
-              alt={character.name}
-              className="w-full h-full object-contain animate-character-entrance"
-              onError={(e) => {
-                // Fallback to graphics if image fails to load
-                const target = e.target as HTMLImageElement
-                target.style.display = 'none'
-              }}
-            />
-          </div>
+        <p className="text-center text-sm text-muted-foreground">
+          {moveCount} moves. {stats.wins} {stats.wins === 1 ? 'win' : 'wins'}, {stats.losses}{' '}
+          {stats.losses === 1 ? 'loss' : 'losses'}, {stats.draws} {stats.draws === 1 ? 'draw' : 'draws'}
+        </p>
 
-          {/* Stats with animation */}
-          <div className="flex items-center justify-between rounded-lg bg-muted p-4 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-300">
-            <span className="text-sm font-medium">Total Moves:</span>
-            <span className="text-lg font-bold animate-in zoom-in duration-300 delay-500">
-              {moveCount}
-            </span>
-          </div>
-        </div>
-
-        <DialogFooter className="flex-col gap-2 sm:flex-row">
-          <Button
-            onClick={onNewGame}
-            className="w-full sm:w-auto animate-in fade-in slide-in-from-bottom-2 duration-500 delay-500 hover:scale-105 active:animate-button-press transition-transform"
-          >
-            Play Again
+        <DialogFooter className="gap-2 sm:justify-center sm:space-x-0">
+          <Button onClick={onNewGame} className="h-11">
+            Play again
           </Button>
-          <Button
-            onClick={onClose}
-            variant="outline"
-            className="w-full sm:w-auto animate-in fade-in slide-in-from-bottom-2 duration-500 delay-600 hover:scale-105 active:animate-button-press transition-transform"
-          >
+          <Button onClick={onClose} variant="ghost" className="h-11">
             Close
           </Button>
         </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+      </DialogContent>
+    </Dialog>
   )
 }

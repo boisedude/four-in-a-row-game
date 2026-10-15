@@ -1,12 +1,9 @@
 /**
  * Game Controls Component
- * Controls for difficulty selection, new game, help, etc.
+ * One primary button, the rest outline or ghost
  */
 
 import { Button } from './ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
-import type { GameMode } from '@/types/connect4.types'
-import type { CharacterId } from '@shared/characters'
 
 interface GameControlsProps {
   onNewGame: () => void
@@ -14,9 +11,26 @@ interface GameControlsProps {
   onShowHelp?: () => void
   onShowKeyboardShortcuts?: () => void
   disabled?: boolean
-  gameMode: GameMode
-  selectedCharacterId?: CharacterId
-  onCharacterChange?: (characterId: CharacterId) => void
+}
+
+function KeyboardIcon() {
+  return (
+    <svg
+      width={20}
+      height={20}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.75}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <rect x="2" y="5" width="20" height="14" rx="2" />
+      <path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M7 15h10" />
+    </svg>
+  )
 }
 
 export function GameControls({
@@ -25,72 +39,33 @@ export function GameControls({
   onShowHelp,
   onShowKeyboardShortcuts,
   disabled = false,
-  gameMode,
-  selectedCharacterId,
-  onCharacterChange,
 }: GameControlsProps) {
   return (
-    <div className="flex flex-wrap items-center justify-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
-      {gameMode === 'pvc' && onCharacterChange && selectedCharacterId && (
-        <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-4 duration-500">
-          <label htmlFor="character" className="text-sm font-medium">
-            Your Opponent:
-          </label>
-          <Select
-            value={selectedCharacterId}
-            onValueChange={value => onCharacterChange(value as CharacterId)}
-          >
-            <SelectTrigger id="character" className="w-40 sm:w-56 transition-all hover:scale-105">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="bella">🐕 Bella - Playful Pup</SelectItem>
-              <SelectItem value="coop">🎮 Coop - Casual Challenger</SelectItem>
-              <SelectItem value="bentley">🐺 Bentley - The Mastermind</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      )}
-
-      <Button
-        onClick={onNewGame}
-        disabled={disabled}
-        variant="default"
-        className="transition-all hover:scale-105 active:animate-button-press"
-      >
-        New Game
+    <div className="arcade-controls">
+      <Button onClick={onNewGame} disabled={disabled} className="h-11 px-4">
+        New game
       </Button>
 
-      <Button
-        onClick={onShowLeaderboard}
-        disabled={disabled}
-        variant="outline"
-        className="transition-all hover:scale-105 active:animate-button-press"
-      >
-        📊 Stats
+      <Button onClick={onShowLeaderboard} disabled={disabled} variant="outline" className="h-11 px-4">
+        Stats
       </Button>
 
       {onShowHelp && (
-        <Button
-          onClick={onShowHelp}
-          disabled={disabled}
-          variant="outline"
-          className="transition-all hover:scale-105 active:animate-button-press"
-        >
-          ❓ How to Play
+        <Button onClick={onShowHelp} variant="outline" className="h-11 px-4">
+          How to play
         </Button>
       )}
 
       {onShowKeyboardShortcuts && (
         <Button
           onClick={onShowKeyboardShortcuts}
-          disabled={disabled}
-          variant="outline"
+          variant="ghost"
           size="icon"
-          title="Keyboard Shortcuts"
-          className="transition-all hover:scale-110 hover:rotate-6 active:animate-button-press"
+          className="h-11 w-11"
+          title="Keyboard shortcuts"
+          aria-label="Keyboard shortcuts"
         >
-          ⌨️
+          <KeyboardIcon />
         </Button>
       )}
     </div>

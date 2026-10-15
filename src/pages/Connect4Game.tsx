@@ -11,18 +11,18 @@ import { LeaderboardDialog } from '@/components/LeaderboardDialog'
 import { HowToPlayDialog } from '@/components/HowToPlayDialog'
 import { KeyboardShortcutsDialog } from '@/components/KeyboardShortcutsDialog'
 import { Tutorial } from '@/components/Tutorial'
-import { AudioControls } from '@/components/AudioControls'
-import { Connect4Logo } from '@/components/graphics'
+import { OpponentChip } from '@/components/OpponentChip'
+import { Button } from '@/components/ui/button'
 import { useConnect4Game } from '@/hooks/useConnect4Game'
 import { useLeaderboard } from '@/hooks/useLeaderboard'
 import { useGameAudio } from '@/hooks/useGameAudio'
 import { useCharacterSelection } from '@/hooks/useCharacterSelection'
 import { useBentleyStats } from '@/hooks/useBentleyStats'
-import { useMainSiteBentleyStats } from '@/hooks/useMainSiteBentleyStats'
+import { reportArcadeResult } from '@/lib/arcadeReporting'
 import { TUTORIAL_SHOW_DELAY_MS, VICTORY_DIALOG_DELAY_MS, ARCADE_URL, STORAGE_KEY_TUTORIAL_COMPLETED } from '@/lib/constants'
 import type { Difficulty } from '@/types/connect4.types'
 import type { CharacterId } from '@shared/characters'
-import { cn } from '@/lib/utils'
+import { ArrowLeftIcon, VolumeIcon, VolumeOffIcon, HelpIcon } from '@shared/icons'
 
 export function Connect4Game() {
   // Read character from URL parameter on initial load
@@ -42,9 +42,8 @@ export function Connect4Game() {
     useConnect4Game(initialDifficulty)
   const { stats, recordWin, recordLoss, recordDraw } = useLeaderboard()
   const { isMuted, toggleMute, playSound } = useGameAudio()
-  const { character, selectedCharacterId, selectCharacter } = useCharacterSelection(initialCharacter)
+  const { character, selectCharacter } = useCharacterSelection(initialCharacter)
   const bentleyStats = useBentleyStats()
-  const mainSiteBentleyStats = useMainSiteBentleyStats()
 
   const [showVictoryDialog, setShowVictoryDialog] = useState(false)
   const [showLeaderboard, setShowLeaderboard] = useState(false)
@@ -53,7 +52,13 @@ export function Connect4Game() {
   const [showTutorial, setShowTutorial] = useState(false)
   const [selectedColumn, setSelectedColumn] = useState<number | null>(null)
   const [hasCompletedTutorial, setHasCompletedTutorial] = useState(() => {
-    return localStorage.getItem(STORAGE_KEY_TUTORIAL_COMPLETED) === 'true'
+    // Arriving from the arcade with a character means the player is ready to play
+    if (new URLSearchParams(window.location.search).has('character')) return true
+    try {
+      return localStorage.getItem(STORAGE_KEY_TUTORIAL_COMPLETED) === 'true'
+    } catch {
+      return false
+    }
   })
 
   // Show tutorial on first visit
@@ -189,6 +194,9 @@ export function Connect4Game() {
       }
       gameEndHandledRef.current = true
 
+      // Arcade-wide Bentley record (exactly once per game via the ref above)
+      reportArcadeResult(character.id, gameState.mode, gameState.status, gameState.winner)
+
       // Play appropriate sound
       if (gameState.status === 'won') {
         if (gameState.winner === 1) {
@@ -197,7 +205,6 @@ export function Connect4Game() {
           // Track Bentley stats if playing against Bentley
           if (character.id === 'bentley') {
             bentleyStats.recordWin(gameState.moveHistory.length) // Local stats
-            mainSiteBentleyStats.recordBentleyLoss() // Main site API (player won, Bentley lost)
           }
         } else {
           playSound('defeat')
@@ -205,7 +212,6 @@ export function Connect4Game() {
           // Track Bentley stats if playing against Bentley
           if (character.id === 'bentley') {
             bentleyStats.recordLoss() // Local stats
-            mainSiteBentleyStats.recordBentleyWin() // Main site API (Bentley won)
           }
         }
       } else if (gameState.status === 'draw') {
@@ -228,6 +234,7 @@ export function Connect4Game() {
   }, [
     gameState.status,
     gameState.winner,
+    gameState.mode,
     gameState.moveHistory.length,
     playSound,
     recordWin,
@@ -235,7 +242,6 @@ export function Connect4Game() {
     recordDraw,
     character.id,
     bentleyStats,
-    mainSiteBentleyStats,
   ])
 
   const handleNewGame = () => {
@@ -256,166 +262,135 @@ export function Connect4Game() {
     window.history.pushState({}, '', url.toString())
   }
 
-  const currentPlayerName = gameState.currentPlayer === 1 ? 'Your Turn' : `${character.name}'s Turn`
-  const currentPlayerColor = gameState.currentPlayer === 1 ? 'text-red-600' : 'text-yellow-600'
+  const opponent = character.name
+  const turnText =
+    gameState.status === 'won'
+      ? gameState.winner === 1
+        ? 'You won'
+        : `${opponent} won`
+      : gameState.status === 'draw'
+        ? 'Draw'
+        : gameState.currentPlayer === 1
+          ? 'Your turn'
+          : `${opponent} is thinking`
+  const turnActive =
+    gameState.status !== 'playing' ? 'over' : gameState.currentPlayer === 1 ? 'you' : 'opponent'
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-      {/* Return to Arcade Button - Fixed position */}
-      <nav className="fixed left-4 top-4 z-10" aria-label="Main navigation">
-        <a
-          href={ARCADE_URL}
-          className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:bg-blue-700 hover:shadow-xl"
-          aria-label="Return to Arcade homepage"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+    <div className="arcade-page">
+      <a
+        href="#game-board"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-card focus:px-4 focus:py-2 focus:text-sm focus:text-foreground"
+      >
+        Skip to game board
+      </a>
+
+      <header className="arcade-topbar">
+        <div className="flex flex-1 items-center">
+          <a
+            href={ARCADE_URL + '/'}
+            className="inline-flex min-h-11 items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
           >
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-          Return to Arcade
-        </a>
-      </nav>
+            <ArrowLeftIcon size={18} />
+            Arcade
+          </a>
+        </div>
+        <h1 className="arcade-display sr-only text-xl sm:not-sr-only">Connect 4</h1>
+        <div className="flex flex-1 items-center justify-end gap-1">
+          <OpponentChip character={character} onCharacterChange={handleCharacterChange} />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-11 w-11 shrink-0"
+            onClick={toggleMute}
+            aria-label={isMuted ? 'Unmute sound effects' : 'Mute sound effects'}
+          >
+            {isMuted ? <VolumeOffIcon /> : <VolumeIcon />}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-11 w-11 shrink-0"
+            onClick={() => setShowHowToPlay(true)}
+            aria-label="How to play"
+          >
+            <HelpIcon />
+          </Button>
+        </div>
+      </header>
 
-      {/* Audio Controls - Fixed position */}
-      <div className="fixed right-4 top-4 z-10">
-        <AudioControls isMuted={isMuted} onToggleMute={toggleMute} />
-      </div>
-
-      <div className="container mx-auto flex min-h-screen flex-col items-center justify-center gap-8 p-4">
-        {/* Header */}
-        <div className="text-center animate-in fade-in slide-in-from-top-4 duration-700">
-          <div className="mb-4 flex items-center justify-center gap-4">
-            <Connect4Logo
-              size={80}
-              className="drop-shadow-lg animate-in zoom-in-50 duration-700 delay-100"
-            />
-            <h1 className="text-5xl font-bold tracking-tight animate-in slide-in-from-right-4 duration-700 delay-200">
-              Connect <span className="text-red-600">4</span>
-            </h1>
+      <main className="arcade-stage">
+        <div className="arcade-score" aria-live="polite">
+          <div>
+            <strong>{stats.wins}</strong>
+            You
           </div>
-          <p className="text-lg font-semibold text-blue-600 dark:text-blue-400 animate-in fade-in duration-700 delay-300">
-            Challenge {character.name} • Can you beat them?
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground animate-in fade-in duration-700 delay-400">
-            Connect four in a row to win
-          </p>
+          <div className="arcade-turn" data-active={turnActive}>
+            {turnText}
+          </div>
+          <div>
+            <strong>{stats.losses}</strong>
+            {opponent}
+          </div>
         </div>
 
-        {/* Game Status */}
-        {gameState.status === 'playing' && (
-          <div
-            className="text-center animate-in fade-in duration-300"
-            role="status"
-            aria-live="polite"
-            aria-label={`Current turn: ${currentPlayerName}`}
-          >
-            <div className="flex items-center justify-center gap-3">
-              {/* Player indicator disc */}
-              <div
-                className={cn(
-                  'relative h-6 w-6 rounded-full shadow-md animate-turn-pulse',
-                  gameState.currentPlayer === 1
-                    ? 'bg-gradient-to-br from-red-500 to-red-600 shadow-red-500/50'
-                    : 'bg-gradient-to-br from-yellow-400 to-yellow-500 shadow-yellow-500/50'
-                )}
-              >
-                <div className="absolute h-full w-full rounded-full bg-white/30 blur-sm animate-turn-pulse" />
-              </div>
-              <p
-                className={cn(
-                  'text-xl font-semibold transition-colors duration-300',
-                  currentPlayerColor
-                )}
-              >
-                {currentPlayerName}
-                <span className="sr-only">
-                  {gameState.currentPlayer === 1 ? ' - Your turn (Red disc)' : ` - ${character.name}'s turn (Yellow disc)`}
-                </span>
-              </p>
-            </div>
-            {isAnimating && (
-              <p className="mt-2 text-sm text-muted-foreground animate-in fade-in duration-200">
-                Dropping disc...
-              </p>
-            )}
-          </div>
-        )}
+        <div id="game-board" className="flex w-full justify-center">
+          <Board
+            board={gameState.board}
+            winningCells={gameState.winningCells}
+            lastMove={gameState.lastMove}
+            onColumnClick={handlePlayerMove}
+            disabled={isAnimating || gameState.status !== 'playing' || gameState.currentPlayer === 2}
+            currentPlayer={gameState.currentPlayer}
+            selectedColumn={gameState.status === 'playing' && gameState.currentPlayer === 1 ? selectedColumn : null}
+          />
+        </div>
 
-        {/* Game Board */}
-        <Board
-          board={gameState.board}
-          winningCells={gameState.winningCells}
-          lastMove={gameState.lastMove}
-          onColumnClick={handlePlayerMove}
-          disabled={isAnimating || gameState.status !== 'playing' || gameState.currentPlayer === 2}
-          currentPlayer={gameState.currentPlayer}
-          selectedColumn={gameState.status === 'playing' && gameState.currentPlayer === 1 ? selectedColumn : null}
-        />
-
-        {/* Game Controls */}
         <GameControls
           onNewGame={handleNewGame}
           onShowLeaderboard={() => setShowLeaderboard(true)}
           onShowHelp={() => setShowHowToPlay(true)}
           onShowKeyboardShortcuts={() => setShowKeyboardShortcuts(true)}
           disabled={isAnimating}
-          gameMode={gameState.mode}
-          selectedCharacterId={selectedCharacterId}
-          onCharacterChange={handleCharacterChange}
         />
+      </main>
 
-        {/* Move Counter */}
-        <div
-          className="text-center text-sm text-muted-foreground"
-          aria-label={`Total moves played: ${gameState.moveHistory.length}`}
-        >
-          Moves: {gameState.moveHistory.length}
-        </div>
+      {/* Victory Dialog */}
+      <VictoryDialog
+        open={showVictoryDialog}
+        winner={gameState.winner}
+        moveCount={gameState.moveHistory.length}
+        onNewGame={handleNewGame}
+        onClose={() => setShowVictoryDialog(false)}
+        isDraw={gameState.status === 'draw'}
+        character={character}
+        stats={stats}
+      />
 
-        {/* Victory Dialog */}
-        <VictoryDialog
-          open={showVictoryDialog}
-          winner={gameState.winner}
-          moveCount={gameState.moveHistory.length}
-          onNewGame={handleNewGame}
-          onClose={() => setShowVictoryDialog(false)}
-          isDraw={gameState.status === 'draw'}
-          character={character}
-        />
+      {/* Leaderboard Dialog */}
+      <LeaderboardDialog
+        open={showLeaderboard}
+        onClose={() => setShowLeaderboard(false)}
+        stats={stats}
+        characterName={character.name}
+      />
 
-        {/* Leaderboard Dialog */}
-        <LeaderboardDialog
-          open={showLeaderboard}
-          onClose={() => setShowLeaderboard(false)}
-          stats={stats}
-          characterName={character.name}
-        />
+      {/* How to Play Dialog */}
+      <HowToPlayDialog open={showHowToPlay} opponentName={opponent} onClose={() => setShowHowToPlay(false)} />
 
-        {/* How to Play Dialog */}
-        <HowToPlayDialog open={showHowToPlay} onClose={() => setShowHowToPlay(false)} />
+      {/* Keyboard Shortcuts Dialog */}
+      <KeyboardShortcutsDialog
+        open={showKeyboardShortcuts}
+        onClose={() => setShowKeyboardShortcuts(false)}
+      />
 
-        {/* Keyboard Shortcuts Dialog */}
-        <KeyboardShortcutsDialog
-          open={showKeyboardShortcuts}
-          onClose={() => setShowKeyboardShortcuts(false)}
-        />
-
-        {/* Tutorial */}
-        <Tutorial
-          open={showTutorial}
-          onClose={() => setShowTutorial(false)}
-          onComplete={handleTutorialComplete}
-        />
-      </div>
+      {/* Tutorial */}
+      <Tutorial
+        open={showTutorial}
+        opponentName={opponent}
+        onClose={() => setShowTutorial(false)}
+        onComplete={handleTutorialComplete}
+      />
     </div>
   )
 }

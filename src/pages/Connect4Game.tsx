@@ -20,7 +20,6 @@ import { useLeaderboard } from '@/hooks/useLeaderboard'
 import { useGameAudio } from '@/hooks/useGameAudio'
 import { useCharacterSelection } from '@/hooks/useCharacterSelection'
 import { useBentleyStats } from '@/hooks/useBentleyStats'
-import { reportArcadeResult } from '@/lib/arcadeReporting'
 import { TUTORIAL_SHOW_DELAY_MS, VICTORY_DIALOG_DELAY_MS, ARCADE_URL, STORAGE_KEY_TUTORIAL_COMPLETED } from '@/lib/constants'
 import type { Difficulty } from '@/types/connect4.types'
 import type { CharacterId } from '@shared/characters'
@@ -199,9 +198,6 @@ export function Connect4Game() {
       }
       gameEndHandledRef.current = true
 
-      // Arcade-wide Bentley record (exactly once per game via the ref above)
-      reportArcadeResult(character.id, gameState.mode, gameState.status, gameState.winner)
-
       // Play appropriate sound
       if (gameState.status === 'won') {
         if (gameState.winner === 1) {
@@ -239,7 +235,6 @@ export function Connect4Game() {
   }, [
     gameState.status,
     gameState.winner,
-    gameState.mode,
     gameState.moveHistory.length,
     playSound,
     recordWin,

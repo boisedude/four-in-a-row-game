@@ -12,6 +12,8 @@ import { HowToPlayDialog } from '@/components/HowToPlayDialog'
 import { KeyboardShortcutsDialog } from '@/components/KeyboardShortcutsDialog'
 import { Tutorial } from '@/components/Tutorial'
 import { OpponentChip } from '@/components/OpponentChip'
+import { ConfirmOpponentDialog } from '@/components/ConfirmOpponentDialog'
+import { getCharacterById } from '@shared/characters'
 import { Button } from '@/components/ui/button'
 import { useConnect4Game } from '@/hooks/useConnect4Game'
 import { useLeaderboard } from '@/hooks/useLeaderboard'
@@ -50,6 +52,7 @@ export function Connect4Game() {
   const [showHowToPlay, setShowHowToPlay] = useState(false)
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false)
   const [showTutorial, setShowTutorial] = useState(false)
+  const [pendingCharacter, setPendingCharacter] = useState<CharacterId | null>(null)
   const [selectedColumn, setSelectedColumn] = useState<number | null>(null)
   const [hasCompletedTutorial, setHasCompletedTutorial] = useState(() => {
     // Arriving from the arcade with a character means the player is ready to play
@@ -91,6 +94,7 @@ export function Connect4Game() {
         showHowToPlay ||
         showKeyboardShortcuts ||
         showTutorial ||
+        pendingCharacter !== null ||
         (e.target as HTMLElement).tagName === 'INPUT'
       ) {
         return
@@ -172,6 +176,7 @@ export function Connect4Game() {
     showHowToPlay,
     showKeyboardShortcuts,
     showTutorial,
+    pendingCharacter,
     selectedColumn,
   ])
 
@@ -249,17 +254,30 @@ export function Connect4Game() {
     startNewGame('pvc', gameState.difficulty)
   }
 
-  const handleCharacterChange = (characterId: CharacterId) => {
+  const applyCharacterChange = (characterId: CharacterId) => {
     selectCharacter(characterId)
     // Map character to difficulty
     const newDifficulty = characterId === 'bella' ? 'easy' : characterId === 'coop' ? 'medium' : 'hard'
     changeDifficulty(newDifficulty)
+    // Changing opponent always starts a fresh game, so a game in progress
+    // can never be finished (and recorded) against a different opponent.
+    setShowVictoryDialog(false)
     startNewGame('pvc', newDifficulty)
 
     // Update URL parameter
     const url = new URL(window.location.href)
     url.searchParams.set('character', characterId)
     window.history.pushState({}, '', url.toString())
+  }
+
+  const handleCharacterChange = (characterId: CharacterId) => {
+    if (characterId === character.id) return
+    const inProgress = gameState.status === 'playing' && gameState.moveHistory.length > 0
+    if (inProgress) {
+      setPendingCharacter(characterId)
+    } else {
+      applyCharacterChange(characterId)
+    }
   }
 
   const opponent = character.name
@@ -354,6 +372,16 @@ export function Connect4Game() {
           disabled={isAnimating}
         />
       </main>
+
+      <ConfirmOpponentDialog
+        open={pendingCharacter !== null}
+        opponentName={pendingCharacter ? getCharacterById(pendingCharacter).name : ''}
+        onCancel={() => setPendingCharacter(null)}
+        onConfirm={() => {
+          if (pendingCharacter) applyCharacterChange(pendingCharacter)
+          setPendingCharacter(null)
+        }}
+      />
 
       {/* Victory Dialog */}
       <VictoryDialog

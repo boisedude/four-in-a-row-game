@@ -79,6 +79,9 @@ export function useConnect4Game(initialDifficulty: Difficulty = 'medium') {
       if (aiMoveTimeoutRef.current) {
         clearTimeout(aiMoveTimeoutRef.current)
         aiMoveTimeoutRef.current = null
+        // A cancelled (not yet fired) move must be rescheduled by the next run,
+        // e.g. when StrictMode re-runs this effect; otherwise the AI never moves.
+        if (!animationTimeoutRef.current) aiMoveScheduledRef.current = false
       }
     }
   }, [

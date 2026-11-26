@@ -27,34 +27,6 @@
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
-
-  /* Animations: only the disc drop */
-  --animate-disc-drop: disc-drop 0.7s cubic-bezier(0.33, 0, 0.67, 1);
-
-  @keyframes disc-drop {
-    0% {
-      transform: translateY(-360px);
-      opacity: 0;
-    }
-    15% {
-      opacity: 1;
-    }
-    55% {
-      transform: translateY(0);
-    }
-    70% {
-      transform: translateY(-18px);
-    }
-    85% {
-      transform: translateY(0);
-    }
-    92% {
-      transform: translateY(-5px);
-    }
-    100% {
-      transform: translateY(0);
-    }
-  }
 }
 
 @layer base {
@@ -63,14 +35,138 @@
   }
 }
 
-/* Hint: a static sagebrush outline on the suggested column and a ring on the
-   cell the disc would land in. Nothing moves. */
-@layer components {
-  .c4-hint {
-    outline: 2px solid hsl(var(--primary));
-    outline-offset: -1px;
+/*
+ * The rack is taller than it is wide once the hover band and the feet are
+ * counted (796 by 752 units), so the column is sized to fit that height.
+ */
+.arcade-stage {
+  --arcade-col: clamp(17.5rem, min(calc(100dvw - 2rem), calc((100dvh - 16rem) * 752 / 796)), 47.5rem);
+}
+
+.c4-board {
+  position: relative;
+  width: var(--arcade-col);
+  max-width: 100%;
+  aspect-ratio: 752 / 796;
+  container-type: inline-size;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.c4-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* The panel casts a short shadow into its own holes, onto the discs behind it. */
+.c4-panel {
+  filter: drop-shadow(0 2px 2px rgba(2, 8, 24, 0.55));
+}
+
+.c4-disc,
+.c4-landing,
+.c4-ghost,
+.c4-win-ring,
+.c4-hint-ring {
+  position: absolute;
+  pointer-events: none;
+}
+
+.c4-disc > svg {
+  display: block;
+}
+
+/* At game over every disc outside the winning four steps back. */
+.c4-disc-dim {
+  filter: brightness(0.62) saturate(0.8);
+  transition: filter 0.3s ease-out;
+}
+
+/* Where the hovered column's disc would land: a light ring in the empty hole */
+.c4-landing {
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px rgba(243, 234, 216, 0.55);
+  background: rgba(243, 234, 216, 0.06);
+}
+
+/* The disc in hand, hovering above the rack */
+.c4-ghost {
+  opacity: 0.8;
+  filter: drop-shadow(0 6px 5px rgba(0, 0, 0, 0.35));
+}
+
+/*
+ * The drop: the disc enters at the top of its column and falls behind the
+ * panel, accelerating, then settles with one small bounce. Duration is set
+ * per disc from how far it falls (250 to 450 ms).
+ */
+.c4-disc-fall {
+  animation-name: c4-fall;
+  animation-fill-mode: backwards;
+}
+
+@keyframes c4-fall {
+  0% {
+    transform: translateY(var(--c4-fall-from));
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.6);
   }
-  .c4-hint-target {
-    box-shadow: inset 0 0 0 3px hsl(var(--primary));
+  80% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0.2, 0.6, 0.4, 1);
+  }
+  90% {
+    transform: translateY(-7%);
+    animation-timing-function: cubic-bezier(0.6, 0, 0.8, 0.4);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* Winning four: a brass ring on the panel around each hole, between dark keylines */
+.c4-win-ring {
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 1.5px hsl(160 50% 8%),
+    inset 0 0 0 1.5px hsl(160 50% 8%),
+    inset 0 0 0 max(3px, 0.8cqw) hsl(var(--primary));
+}
+
+/* Hint: the same static brass ring as every arcade game, on the hover spot and the landing hole */
+.c4-hint-ring {
+  border-radius: 50%;
+  box-shadow:
+    inset 0 0 0 2px hsl(160 50% 8%),
+    inset 0 0 0 6px hsl(var(--primary)),
+    inset 0 0 0 8px hsl(160 50% 8%);
+}
+
+/* Each column is one click target, from the hover band to the bottom of the rack. */
+.c4-column {
+  position: absolute;
+  top: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: default;
+}
+
+.c4-column[data-playable] {
+  cursor: pointer;
+}
+
+.c4-column:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 3px hsl(var(--ring));
+  border-radius: 0.375rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .c4-disc-fall {
+    animation: none;
   }
 }

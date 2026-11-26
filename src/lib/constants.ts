@@ -7,8 +7,8 @@
 // AI Configuration
 // ===========================================
 
-/** Delay in milliseconds before AI makes a move */
-export const AI_MOVE_DELAY_MS = 500
+/** Shortest time from the player's move to the reply landing; a slower search is its own pause */
+export const AI_MOVE_DELAY_MS = 600
 
 /** Search depth for minimax algorithm in hard mode */
 export const AI_MINIMAX_DEPTH = 6
@@ -16,9 +16,6 @@ export const AI_MINIMAX_DEPTH = 6
 // ===========================================
 // Animation Timings (in milliseconds)
 // ===========================================
-
-/** Duration of disc drop animation */
-export const DISC_DROP_ANIMATION_MS = 100
 
 /** Delay before showing victory dialog after game ends */
 export const VICTORY_DIALOG_DELAY_MS = 800

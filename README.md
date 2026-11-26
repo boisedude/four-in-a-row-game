@@ -29,11 +29,11 @@ Created by M. Cooper for [www.mcooper.com](https://www.mcooper.com)
 ### Engaging User Experience
 
 - 30+ rotating victory/defeat messages with edgy humor
-- Smooth disc drop animations (600ms with physics-inspired motion)
+- Discs fall behind the rack's front panel under gravity and settle with one bounce
 - Web Audio API-powered sound effects
 - Comprehensive stats tracking and leaderboard
-- Animated win highlighting
-- Column hover preview showing where your disc will land
+- The winning four ringed in brass
+- Column hover preview: the disc in hand hovers over the column and its landing hole is marked
 
 ### Full Accessibility
 

@@ -26,7 +26,7 @@ export function HowToPlayDialog({ open, opponentName, onClose }: HowToPlayDialog
             <h3 className="mb-1.5 text-base font-semibold text-foreground">Rules</h3>
             <ul className="list-disc space-y-1 pl-5">
               <li>The board has 7 columns and 6 rows.</li>
-              <li>You play red and go first. {opponentName} plays yellow.</li>
+              <li>You play red and go first. {opponentName} plays yellow, the discs with a star.</li>
               <li>Pick a column to drop a disc. It falls to the lowest empty space.</li>
               <li>Four in a row wins, horizontally, vertically, or diagonally.</li>
               <li>If all 42 spaces fill with no winner, the game is a draw.</li>
@@ -47,8 +47,9 @@ export function HowToPlayDialog({ open, opponentName, onClose }: HowToPlayDialog
           <section>
             <h3 className="mb-1.5 text-base font-semibold text-foreground">Opponents</h3>
             <p>
-              Bella plays random moves. Coop blocks threats and takes wins. Bentley searches six
-              moves ahead. Click the opponent chip at the top to switch.
+              Bella plays random moves. Coop looks six moves ahead. Bentley searches deeper and,
+              once enough discs are down, plays the endgame perfectly. Click the opponent chip at
+              the top to switch.
             </p>
           </section>
         </div>

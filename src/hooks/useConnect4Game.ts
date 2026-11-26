@@ -7,15 +7,13 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import type { GameState, Difficulty, GameMode } from '@/types/connect4.types'
 import { createInitialGameState, makeMove, isValidMove } from '@/lib/connect4Rules'
 import { requestAIMove } from '@/lib/aiClient'
-import { AI_MOVE_DELAY_MS, DISC_DROP_ANIMATION_MS } from '@/lib/constants'
+import { AI_MOVE_DELAY_MS } from '@/lib/constants'
 
 export function useConnect4Game(initialDifficulty: Difficulty = 'medium') {
   const [gameState, setGameState] = useState<GameState>(() =>
     createInitialGameState('pvc', initialDifficulty)
   )
-  const [isAnimating, setIsAnimating] = useState(false)
   const aiMoveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const animationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const aiMoveScheduledRef = useRef(false)
   // Bumped whenever a pending search must be ignored (new game, undo, effect re-run).
   const aiGenerationRef = useRef(0)
@@ -26,20 +24,18 @@ export function useConnect4Game(initialDifficulty: Difficulty = 'medium') {
       if (aiMoveTimeoutRef.current) {
         clearTimeout(aiMoveTimeoutRef.current)
       }
-      if (animationTimeoutRef.current) {
-        clearTimeout(animationTimeoutRef.current)
-      }
     }
   }, [])
 
-  // Handle AI move when it's AI's turn. The search runs in a worker; the reply
-  // still waits at least AI_MOVE_DELAY_MS so it never lands instantly.
+  // Handle AI move when it's AI's turn. The search runs in a worker and its time
+  // is the pause; a reply that comes back sooner than AI_MOVE_DELAY_MS waits out
+  // the rest, so it never lands on top of the player's falling disc. The board
+  // updates at once and the disc's fall plays on the new position.
   useEffect(() => {
     if (
       gameState.currentPlayer !== 2 ||
       gameState.status !== 'playing' ||
       gameState.mode !== 'pvc' ||
-      isAnimating ||
       aiMoveScheduledRef.current
     ) {
       return
@@ -62,20 +58,14 @@ export function useConnect4Game(initialDifficulty: Difficulty = 'medium') {
         aiMoveTimeoutRef.current = setTimeout(() => {
           aiMoveTimeoutRef.current = null
           if (stale()) return
-          setIsAnimating(true)
-          animationTimeoutRef.current = setTimeout(() => {
-            setGameState(prevState => {
-              try {
-                return makeMove(prevState, aiColumn)
-              } catch {
-                return prevState
-              }
-            })
-            setIsAnimating(false)
-            animationTimeoutRef.current = null
-            // Reset after the animation so the same turn cannot be played twice
-            aiMoveScheduledRef.current = false
-          }, DISC_DROP_ANIMATION_MS)
+          setGameState(prevState => {
+            try {
+              return makeMove(prevState, aiColumn)
+            } catch {
+              return prevState
+            }
+          })
+          aiMoveScheduledRef.current = false
         }, wait)
       })
       .catch(() => {
@@ -84,9 +74,7 @@ export function useConnect4Game(initialDifficulty: Difficulty = 'medium') {
       })
 
     return () => {
-      // Once the disc is falling the move stands; before that, a re-run (StrictMode,
-      // new game) discards this search and schedules a fresh one.
-      if (animationTimeoutRef.current) return
+      // A re-run (StrictMode, new game, undo) discards this search and schedules a fresh one.
       cancelled = true
       if (aiMoveTimeoutRef.current) {
         clearTimeout(aiMoveTimeoutRef.current)
@@ -100,41 +88,23 @@ export function useConnect4Game(initialDifficulty: Difficulty = 'medium') {
     gameState.mode,
     gameState.board,
     gameState.difficulty,
-    isAnimating,
   ])
 
   const handlePlayerMove = useCallback(
     (column: number) => {
-      if (isAnimating || gameState.status !== 'playing') {
+      if (gameState.status !== 'playing' || !isValidMove(gameState.board, column)) {
         return
       }
-
-      if (!isValidMove(gameState.board, column)) {
-        return
-      }
-
-      try {
-        setIsAnimating(true)
-
-        // Simulate animation delay
-        animationTimeoutRef.current = setTimeout(() => {
-          setGameState(prevState => {
-            try {
-              return makeMove(prevState, column)
-            } catch {
-              // Move failed - return unchanged state
-              return prevState
-            }
-          })
-          setIsAnimating(false)
-          animationTimeoutRef.current = null
-        }, DISC_DROP_ANIMATION_MS)
-      } catch {
-        // Error during move setup - reset animation state
-        setIsAnimating(false)
-      }
+      // The board changes now; the disc's fall is drawn on the new position.
+      setGameState(prevState => {
+        try {
+          return makeMove(prevState, column)
+        } catch {
+          return prevState
+        }
+      })
     },
-    [gameState.board, gameState.status, isAnimating]
+    [gameState.board, gameState.status]
   )
 
   const startNewGame = useCallback(
@@ -144,13 +114,8 @@ export function useConnect4Game(initialDifficulty: Difficulty = 'medium') {
         clearTimeout(aiMoveTimeoutRef.current)
         aiMoveTimeoutRef.current = null
       }
-      if (animationTimeoutRef.current) {
-        clearTimeout(animationTimeoutRef.current)
-        animationTimeoutRef.current = null
-      }
       aiMoveScheduledRef.current = false
       aiGenerationRef.current++
-      setIsAnimating(false)
 
       const newDifficulty = difficulty ?? gameState.difficulty
       setGameState(createInitialGameState(mode, newDifficulty))
@@ -170,7 +135,6 @@ export function useConnect4Game(initialDifficulty: Difficulty = 'medium') {
   const undoCount = gameState.mode === 'pvc' ? 2 : 1
   const canUndo =
     gameState.status === 'playing' &&
-    !isAnimating &&
     (gameState.mode !== 'pvc' || gameState.currentPlayer === 1) &&
     gameState.moveHistory.length >= undoCount
 
@@ -192,7 +156,6 @@ export function useConnect4Game(initialDifficulty: Difficulty = 'medium') {
 
   return {
     gameState,
-    isAnimating,
     handlePlayerMove,
     startNewGame,
     resetGame,

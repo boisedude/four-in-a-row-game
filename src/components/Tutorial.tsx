@@ -13,7 +13,7 @@ import {
   DialogTitle,
 } from './ui/dialog'
 import { Button } from './ui/button'
-import { getDiscStyle } from '@/lib/discStyles'
+import { Disc } from './Disc'
 
 interface TutorialProps {
   open: boolean
@@ -31,11 +31,9 @@ interface TutorialStep {
 
 function MiniDisc({ player, size = 48 }: { player: 1 | 2; size?: number }) {
   return (
-    <div
-      className="rounded-full"
-      style={{ width: size, height: size, ...getDiscStyle(player) }}
-      aria-hidden="true"
-    />
+    <div style={{ width: size, height: size }} aria-hidden="true">
+      <Disc player={player} className="h-full w-full" />
+    </div>
   )
 }
 
@@ -62,7 +60,7 @@ function getSteps(opponent: string): TutorialStep[] {
     },
     {
       title: 'You are red',
-      description: `You play red and ${opponent} plays yellow. Red always goes first, which gives you a slight advantage.`,
+      description: `You play red and ${opponent} plays yellow; the yellow discs carry a star. Red always goes first, which gives you a slight advantage.`,
       image: (
         <div className="flex items-center justify-center gap-6">
           <div className="flex flex-col items-center gap-2">
@@ -91,7 +89,7 @@ function getSteps(opponent: string): TutorialStep[] {
     {
       title: 'Choose your opponent',
       description:
-        'Start with Bella to learn the basics. Coop plays a stronger game, and Bentley looks six moves ahead.',
+        'Start with Bella to learn the basics. Coop looks six moves ahead, and Bentley searches deeper and plays the endgame perfectly.',
       tip: 'Click the opponent chip at the top to switch at any time.',
     },
     {

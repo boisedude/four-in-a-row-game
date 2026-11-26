@@ -41,7 +41,7 @@ export function Connect4Game() {
   const initialCharacter = getInitialCharacter()
   const initialDifficulty: Difficulty = initialCharacter === 'bella' ? 'easy' : initialCharacter === 'coop' ? 'medium' : 'hard'
 
-  const { gameState, isAnimating, handlePlayerMove, startNewGame, changeDifficulty, canUndo, undo } =
+  const { gameState, handlePlayerMove, startNewGame, changeDifficulty, canUndo, undo } =
     useConnect4Game(initialDifficulty)
   const { stats, recordWin, recordLoss, recordDraw } = useLeaderboard()
   const { isMuted, toggleMute, playSound } = useGameAudio()
@@ -130,7 +130,7 @@ export function Connect4Game() {
       }
 
       // Only handle gameplay keys during active gameplay and player's turn
-      if (gameState.status !== 'playing' || isAnimating || gameState.currentPlayer === 2) {
+      if (gameState.status !== 'playing' || gameState.currentPlayer === 2) {
         return
       }
 
@@ -172,7 +172,6 @@ export function Connect4Game() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [
     gameState,
-    isAnimating,
     handlePlayerMove,
     startNewGame,
     toggleMute,
@@ -256,7 +255,6 @@ export function Connect4Game() {
     gameState.status === 'playing' &&
     gameState.mode === 'pvc' &&
     gameState.currentPlayer === 1 &&
-    !isAnimating &&
     !hintPending &&
     hintColumn === null
 
@@ -371,9 +369,12 @@ export function Connect4Game() {
           <div className="arcade-turn" data-active={turnActive}>
             {turnText}
           </div>
-          <div>
-            <strong>{stats.losses}</strong>
-            {opponent}
+          <div className="arcade-player">
+            <img className="arcade-avatar" data-character={character.id} src={character.avatar} alt="" />
+            <div>
+              <strong>{stats.losses}</strong>
+              {opponent}
+            </div>
           </div>
         </div>
 
@@ -382,8 +383,10 @@ export function Connect4Game() {
             board={gameState.board}
             winningCells={gameState.winningCells}
             lastMove={gameState.lastMove}
+            moveCount={gameState.moveHistory.length}
             onColumnClick={handlePlayerMove}
-            disabled={isAnimating || gameState.status !== 'playing' || gameState.currentPlayer === 2}
+            disabled={gameState.status !== 'playing' || gameState.currentPlayer === 2}
+            gameOver={gameState.status !== 'playing'}
             currentPlayer={gameState.currentPlayer}
             selectedColumn={gameState.status === 'playing' && gameState.currentPlayer === 1 ? selectedColumn : null}
             hintColumn={hintColumn}
@@ -403,7 +406,7 @@ export function Connect4Game() {
           onShowLeaderboard={() => setShowLeaderboard(true)}
           onShowHelp={() => setShowHowToPlay(true)}
           onShowKeyboardShortcuts={() => setShowKeyboardShortcuts(true)}
-          disabled={isAnimating}
+          playing={gameState.status === 'playing'}
         />
       </main>
 

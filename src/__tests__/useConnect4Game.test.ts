@@ -53,10 +53,9 @@ describe('useConnect4Game', () => {
     expect(result.current.gameState.moveHistory).toHaveLength(4)
     expect(result.current.canUndo).toBe(true)
 
+    const firstTwo = result.current.gameState.moveHistory.slice(0, 2).map(m => m.column)
     act(() => result.current.undo())
-    expect(result.current.gameState.moveHistory.map(m => m.column)).toEqual(
-      result.current.gameState.moveHistory.map(m => m.column)
-    )
+    expect(result.current.gameState.moveHistory.map(m => m.column)).toEqual(firstTwo)
     expect(result.current.gameState.moveHistory).toHaveLength(2)
     expect(result.current.gameState.currentPlayer).toBe(1)
     expect(result.current.gameState.board.flat().filter(c => c !== null)).toHaveLength(2)

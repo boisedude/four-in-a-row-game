@@ -556,18 +556,26 @@ function searchH(
   for (let i = 0; i < COLUMNS; i++) {
     const c = COLUMN_ORDER[i]
     let cell: number
+    let threats = 0
+    // Next to the leaves, history and column order are enough; threat counting costs more than it saves.
     if (c < 4) {
       const b = nL & COL_MASK[c]
       if (!b) continue
-      winningCells(cL | b, cH, mL, mH)
+      if (depth > 1) {
+        winningCells(cL | b, cH, mL, mH)
+        threats = pop(WL) + pop(WH)
+      }
       cell = 31 - Math.clz32(b)
     } else {
       const b = nH & COL_MASK[c]
       if (!b) continue
-      winningCells(cL, cH | b, mL, mH)
+      if (depth > 1) {
+        winningCells(cL, cH | b, mL, mH)
+        threats = pop(WL) + pop(WH)
+      }
       cell = 28 + 31 - Math.clz32(b)
     }
-    let s = (pop(WL) + pop(WH)) * 4096 + Math.min(history[side + cell], 4095)
+    let s = threats * 4096 + Math.min(history[side + cell], 4095)
     if (c === ttMove) s = 1 << 28
     let j = n++
     while (j > 0 && listScore[base + j - 1] < s) {

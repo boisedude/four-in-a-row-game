@@ -1,10 +1,10 @@
 import { renderHook, act } from '@testing-library/react'
 
-// createAIWorker uses import.meta, which Jest cannot compile; without a worker
+// createAIWorker uses import.meta, which jsdom cannot run; without a worker
 // the client searches synchronously.
-jest.mock('@/lib/createAIWorker', () => ({
+vi.mock('@/lib/createAIWorker', () => ({
   createAIWorker: () => {
-    throw new Error('no worker in jest')
+    throw new Error('no worker in tests')
   },
 }))
 
@@ -13,15 +13,15 @@ import { useConnect4Game } from '@/hooks/useConnect4Game'
 async function flush(ms: number) {
   for (let i = 0; i < Math.ceil(ms / 100); i++) {
     await act(async () => {
-      jest.advanceTimersByTime(100)
+      vi.advanceTimersByTime(100)
       await Promise.resolve()
     })
   }
 }
 
 describe('useConnect4Game', () => {
-  beforeEach(() => jest.useFakeTimers())
-  afterEach(() => jest.useRealTimers())
+  beforeEach(() => vi.useFakeTimers())
+  afterEach(() => vi.useRealTimers())
 
   it('startNewGame with a difficulty discards the game in progress', async () => {
     const { result } = renderHook(() => useConnect4Game('easy'))

@@ -1,10 +1,8 @@
 /**
  * App Component
- * Main application with routing and error boundary
- * Uses HashRouter for easy deployment without server configuration
+ * The game page inside an error boundary
  */
 
-import { HashRouter, Routes, Route } from 'react-router-dom'
 import { ErrorBoundary, FallbackProps } from 'react-error-boundary'
 import { Connect4Game } from './pages/Connect4Game'
 
@@ -28,11 +26,7 @@ function ErrorFallback({ error }: FallbackProps) {
 export default function App() {
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <HashRouter>
-        <Routes>
-          <Route path="/" element={<Connect4Game />} />
-        </Routes>
-      </HashRouter>
+      <Connect4Game />
     </ErrorBoundary>
   )
 }

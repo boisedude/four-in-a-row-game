@@ -1,7 +1,7 @@
 # Four in a Row - Play Coop!
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)
+![TypeScript](https://img.shields.io/badge/TypeScript-7-blue)
 ![React](https://img.shields.io/badge/React-19-blue)
 
 A browser-based Four in a Row game featuring AI opponents with personality-driven difficulty levels. Challenge Coop and his alter ego Bentley in this classic strategy game with a modern twist!
@@ -56,11 +56,10 @@ Created by M. Cooper for [www.mcooper.com](https://www.mcooper.com)
 Built with modern web technologies:
 
 - **[React 19](https://react.dev/)** - Latest React features with strict mode compliance
-- **[TypeScript 5.7](https://www.typescriptlang.org/)** - Full type safety throughout
-- **[Vite 5](https://vitejs.dev/)** - Lightning-fast development and builds
+- **[TypeScript 7](https://www.typescriptlang.org/)** - Full type safety throughout
+- **[Vite 8](https://vitejs.dev/)** - Development server and builds
 - **[Tailwind CSS](https://tailwindcss.com/)** - Utility-first CSS framework
 - **[shadcn/ui](https://ui.shadcn.com/)** - Beautiful, accessible component library
-- **[React Router 7](https://reactrouter.com/)** - Client-side routing
 - **[Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)** - Dynamic sound generation
 
 ---
@@ -69,7 +68,7 @@ Built with modern web technologies:
 
 ### Prerequisites
 
-- Node.js 18+ and npm
+- Node.js 24+ and npm
 
 ### Installation
 
@@ -156,7 +155,7 @@ four-in-a-row/
 │   │   └── aiStrategies.ts     # Opponents (Bella, Coop, Bentley); engine.ts is the search
 │   ├── types/              # TypeScript type definitions
 │   ├── pages/              # Page components
-│   └── App.tsx             # Main application with routing
+│   └── App.tsx             # Error boundary around the game page
 ├── dist/                   # Production build output
 └── package.json            # Dependencies and scripts
 ```
@@ -172,7 +171,8 @@ npm run dev          # Start development server (http://localhost:3001)
 npm run build        # Build for production
 npm run preview      # Preview production build
 npm run type-check   # TypeScript validation
-npm run lint         # ESLint check
+npm run test         # Vitest unit tests
+npm run lint         # oxlint check
 npm run lint:fix     # Auto-fix lint issues
 npm run format       # Format code with Prettier
 ```
@@ -197,7 +197,7 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 
 ### Development Guidelines
 
-- Follow the existing code style (Prettier + ESLint)
+- Follow the existing code style (Prettier + oxlint)
 - Maintain TypeScript strict mode compliance
 - Add appropriate comments for complex logic
 - Test all changes thoroughly

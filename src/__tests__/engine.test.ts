@@ -175,7 +175,8 @@ describe('tactics', () => {
           ? Math.floor((43 - stones) / 2)
           : -bruteScore(next, other(player), stones + 1)
       expect(kept).toBe(best)
-      if (r.exact) expect(r.solvedScore).toBe(best)
+      // An exact result must report the true score; a non-exact one carries no claim.
+      expect(r.exact ? r.solvedScore : best).toBe(best)
     }
     expect(found).toBeGreaterThan(0)
   })
@@ -198,6 +199,6 @@ describe('never returns an illegal move', () => {
 
   it('throws only when the board is full', () => {
     const full = boardFrom(['1212121', '2121212', '1212121', '1212121', '2121212', '1212121'])
-    expect(() => searchBestMove(full, 1)).toThrow()
+    expect(() => searchBestMove(full, 1)).toThrow('No valid moves available')
   })
 })

@@ -58,6 +58,6 @@ describe('getAIMove', () => {
     const full: Board = Array.from({ length: 6 }, (_, r) =>
       Array.from({ length: 7 }, (_, c) => (((r >> 1) + c) % 2 === 0 ? 1 : 2) as Player)
     )
-    expect(() => getAIMove(full, 1, 'easy')).toThrow()
+    expect(() => getAIMove(full, 1, 'easy')).toThrow('No valid moves available')
   })
 })

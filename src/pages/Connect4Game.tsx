@@ -20,8 +20,10 @@ import { useLeaderboard } from '@/hooks/useLeaderboard'
 import { useGameAudio } from '@/hooks/useGameAudio'
 import { useCharacterSelection } from '@/hooks/useCharacterSelection'
 import { useBentleyStats } from '@/hooks/useBentleyStats'
+import { requestAIMove } from '@/lib/aiClient'
+import { HINT_TIME_MS } from '@/lib/aiStrategies'
 import { TUTORIAL_SHOW_DELAY_MS, VICTORY_DIALOG_DELAY_MS, ARCADE_URL, STORAGE_KEY_TUTORIAL_COMPLETED } from '@/lib/constants'
-import type { Difficulty } from '@/types/connect4.types'
+import type { Board as BoardType, Difficulty } from '@/types/connect4.types'
 import type { CharacterId } from '@shared/characters'
 import { ArrowLeftIcon, VolumeIcon, VolumeOffIcon, HelpIcon } from '@shared/icons'
 
@@ -39,7 +41,7 @@ export function Connect4Game() {
   const initialCharacter = getInitialCharacter()
   const initialDifficulty: Difficulty = initialCharacter === 'bella' ? 'easy' : initialCharacter === 'coop' ? 'medium' : 'hard'
 
-  const { gameState, isAnimating, handlePlayerMove, startNewGame, changeDifficulty } =
+  const { gameState, isAnimating, handlePlayerMove, startNewGame, changeDifficulty, canUndo, undo } =
     useConnect4Game(initialDifficulty)
   const { stats, recordWin, recordLoss, recordDraw } = useLeaderboard()
   const { isMuted, toggleMute, playSound } = useGameAudio()
@@ -53,6 +55,10 @@ export function Connect4Game() {
   const [showTutorial, setShowTutorial] = useState(false)
   const [pendingCharacter, setPendingCharacter] = useState<CharacterId | null>(null)
   const [selectedColumn, setSelectedColumn] = useState<number | null>(null)
+  // A hint belongs to the board it was asked for; any move, undo or new game
+  // makes a new board, which clears the mark.
+  const [hint, setHint] = useState<{ board: BoardType; column: number } | null>(null)
+  const [hintBoard, setHintBoard] = useState<BoardType | null>(null)
   const [hasCompletedTutorial, setHasCompletedTutorial] = useState(() => {
     // Arriving from the arcade with a character means the player is ready to play
     if (new URLSearchParams(window.location.search).has('character')) return true
@@ -244,6 +250,30 @@ export function Connect4Game() {
     bentleyStats,
   ])
 
+  const hintColumn = hint && hint.board === gameState.board ? hint.column : null
+  const hintPending = hintBoard !== null && hintBoard === gameState.board
+  const hintAvailable =
+    gameState.status === 'playing' &&
+    gameState.mode === 'pvc' &&
+    gameState.currentPlayer === 1 &&
+    !isAnimating &&
+    !hintPending &&
+    hintColumn === null
+
+  const handleHint = () => {
+    if (!hintAvailable) return
+    const board = gameState.board
+    setHintBoard(board)
+    requestAIMove(board, 1, 'hard', HINT_TIME_MS)
+      .then(column => setHint({ board, column }))
+      .catch(() => {
+        // No hint this time; the button becomes available again
+      })
+      .finally(() => {
+        setHintBoard(current => (current === board ? null : current))
+      })
+  }
+
   const handleNewGame = () => {
     setShowVictoryDialog(false)
     startNewGame('pvc', gameState.difficulty)
@@ -356,11 +386,20 @@ export function Connect4Game() {
             disabled={isAnimating || gameState.status !== 'playing' || gameState.currentPlayer === 2}
             currentPlayer={gameState.currentPlayer}
             selectedColumn={gameState.status === 'playing' && gameState.currentPlayer === 1 ? selectedColumn : null}
+            hintColumn={hintColumn}
           />
         </div>
 
+        <p className="sr-only" aria-live="polite">
+          {hintColumn !== null ? `Hint: column ${hintColumn + 1}` : ''}
+        </p>
+
         <GameControls
           onNewGame={handleNewGame}
+          onHint={handleHint}
+          hintDisabled={!hintAvailable}
+          onUndo={undo}
+          undoDisabled={!canUndo}
           onShowLeaderboard={() => setShowLeaderboard(true)}
           onShowHelp={() => setShowHowToPlay(true)}
           onShowKeyboardShortcuts={() => setShowKeyboardShortcuts(true)}

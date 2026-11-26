@@ -16,6 +16,8 @@ interface CellProps {
   col: number
   /** Translucent preview of the disc the player would drop here */
   previewPlayer?: Player | null
+  /** The cell a hinted disc would land in */
+  isHintTarget?: boolean
 }
 
 export const Cell = memo(function Cell({
@@ -25,6 +27,7 @@ export const Cell = memo(function Cell({
   row,
   col,
   previewPlayer = null,
+  isHintTarget = false,
 }: CellProps) {
   const getCellLabel = (): string => {
     if (!player) return `Empty cell at row ${row + 1}, column ${col + 1}`
@@ -40,6 +43,7 @@ export const Cell = memo(function Cell({
       aria-label={getCellLabel()}
     >
       <Disc player={player} isWinning={isWinning} isLast={isLast} />
+      {isHintTarget && <div className="c4-hint-target absolute inset-0 rounded-full" aria-hidden="true" />}
       {!player && previewPlayer && (
         <div
           className="absolute inset-0 rounded-full opacity-55"

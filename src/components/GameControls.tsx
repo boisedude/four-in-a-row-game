@@ -7,6 +7,10 @@ import { Button } from './ui/button'
 
 interface GameControlsProps {
   onNewGame: () => void
+  onHint: () => void
+  hintDisabled: boolean
+  onUndo: () => void
+  undoDisabled: boolean
   onShowLeaderboard: () => void
   onShowHelp?: () => void
   onShowKeyboardShortcuts?: () => void
@@ -35,6 +39,10 @@ function KeyboardIcon() {
 
 export function GameControls({
   onNewGame,
+  onHint,
+  hintDisabled,
+  onUndo,
+  undoDisabled,
   onShowLeaderboard,
   onShowHelp,
   onShowKeyboardShortcuts,
@@ -44,6 +52,20 @@ export function GameControls({
     <div className="arcade-controls">
       <Button onClick={onNewGame} disabled={disabled} className="h-11 px-4">
         New game
+      </Button>
+
+      <Button
+        onClick={onHint}
+        disabled={hintDisabled}
+        variant="outline"
+        className="h-11 px-4"
+        aria-label="Hint: show a suggested column"
+      >
+        Hint
+      </Button>
+
+      <Button onClick={onUndo} disabled={undoDisabled} variant="outline" className="h-11 px-4">
+        Undo
       </Button>
 
       <Button onClick={onShowLeaderboard} disabled={disabled} variant="outline" className="h-11 px-4">

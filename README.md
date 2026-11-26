@@ -12,7 +12,7 @@ A browser-based Four in a Row game featuring AI opponents with personality-drive
 
 ## About
 
-Four in a Row is a classic strategy game where you compete against Coop, an AI opponent with three distinct personalities. Each difficulty level brings unique character and challenge, from the hung-over Sleepy Coop to the mastermind Bentley who thinks six moves ahead.
+Four in a Row is a classic strategy game where you compete against Coop, an AI opponent with three distinct personalities. Each difficulty level brings unique character and challenge, from Bella, who plays at random, to Bentley, who solves the endgame exactly.
 
 Created by M. Cooper for [www.mcooper.com](https://www.mcooper.com)
 
@@ -22,9 +22,9 @@ Created by M. Cooper for [www.mcooper.com](https://www.mcooper.com)
 
 ### Three AI Difficulty Levels with Personality
 
-- **😴 Sleepy Coop (Easy)** - Random moves, perfect for beginners
-- **🤓 Caffeinated Coop (Medium)** - Greedy algorithm with tactical thinking
-- **🐺 Bentley - The Mastermind (Hard)** - Minimax algorithm with alpha-beta pruning (depth 6)
+- **Bella (Easy)** - Random moves, perfect for beginners
+- **Coop (Medium)** - Searches 6 moves ahead, with a little randomness among near-equal moves
+- **Bentley (Hard)** - Bitboard engine in a Web Worker: deep alpha-beta search early, exact solving of the endgame
 
 ### Engaging User Experience
 
@@ -122,20 +122,17 @@ Connect four of your discs in any direction:
 
 ## AI Difficulty Levels
 
-### 😴 Sleepy Coop (Easy)
-*"I'm hung over..."*
+### Bella (Easy)
 
-Random move selection makes Sleepy Coop unpredictable but beatable. Great for learning the game or building confidence.
+Random move selection makes Bella unpredictable but beatable. Great for learning the game or building confidence.
 
-### 🤓 Caffeinated Coop (Medium)
-*"Coffee powered!"*
+### Coop (Medium)
 
-A greedy algorithm that prioritizes immediate wins and blocks. Caffeinated Coop will punish your mistakes with tactical thinking.
+Coop searches 6 moves ahead with the same engine as Bentley and picks at random among moves that score about the same, so he sees tactics but drifts strategically.
 
-### 🐺 Bentley - The Mastermind (Hard)
-*"Bringing everything!"*
+### Bentley (Hard)
 
-Bentley uses a minimax algorithm with alpha-beta pruning to search 6 moves ahead, evaluating thousands of positions. Nearly unbeatable - but not impossible! Can you dethrone the mastermind?
+Bentley's engine (`src/lib/engine.ts`) runs in a Web Worker with about 700 ms per move. Early on it searches deep with alpha-beta and an evaluation built on open threats and their row parity; once enough discs are down it solves the position exactly and plays perfectly from there. You move first, and the first player wins with perfect play, so he can be beaten, but he punishes mistakes.
 
 ---
 
@@ -156,7 +153,7 @@ four-in-a-row/
 │   │   └── useGameAudio.ts     # Web Audio API integration
 │   ├── lib/                # Game logic
 │   │   ├── connect4Rules.ts    # Game rules engine
-│   │   └── aiStrategies.ts     # AI algorithms
+│   │   └── aiStrategies.ts     # Opponents (Bella, Coop, Bentley); engine.ts is the search
 │   ├── types/              # TypeScript type definitions
 │   ├── pages/              # Page components
 │   └── App.tsx             # Main application with routing

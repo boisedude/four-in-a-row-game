@@ -16,6 +16,8 @@ interface BoardProps {
   disabled: boolean
   currentPlayer: Player
   selectedColumn?: number | null
+  /** Column suggested by a hint, marked with a static ring */
+  hintColumn?: number | null
 }
 
 export const Board = memo(function Board({
@@ -26,6 +28,7 @@ export const Board = memo(function Board({
   disabled,
   currentPlayer,
   selectedColumn,
+  hintColumn = null,
 }: BoardProps) {
   const [hoveredColumn, setHoveredColumn] = useState<number | null>(null)
 
@@ -51,6 +54,7 @@ export const Board = memo(function Board({
           onMouseEnter={() => setHoveredColumn(colIndex)}
           onMouseLeave={() => setHoveredColumn(null)}
           currentPlayer={currentPlayer}
+          isHint={hintColumn === colIndex}
         />
       ))}
     </div>

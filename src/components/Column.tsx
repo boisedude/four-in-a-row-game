@@ -20,6 +20,7 @@ interface ColumnProps {
   onMouseEnter: () => void
   onMouseLeave: () => void
   currentPlayer: Player
+  isHint?: boolean
 }
 
 export const Column = memo(function Column({
@@ -33,6 +34,7 @@ export const Column = memo(function Column({
   onMouseEnter,
   onMouseLeave,
   currentPlayer,
+  isHint = false,
 }: ColumnProps) {
   const isColumnFull = cells[0] !== null
   const canDrop = !disabled && !isColumnFull
@@ -59,7 +61,7 @@ export const Column = memo(function Column({
     if (disabled) {
       return `Column ${colIndex + 1}, waiting for opponent`
     }
-    return `Drop disc in column ${colIndex + 1}`
+    return `Drop disc in column ${colIndex + 1}${isHint ? ', suggested by hint' : ''}`
   }
 
   return (
@@ -72,8 +74,10 @@ export const Column = memo(function Column({
         'flex min-w-0 flex-col gap-1 rounded-md p-0.5 sm:gap-2 sm:p-1',
         'focus-visible:outline-2 focus-visible:outline-primary',
         canDrop ? 'cursor-pointer' : 'cursor-default',
-        canDrop && isHovered && 'bg-white/5'
+        canDrop && isHovered && 'bg-white/5',
+        isHint && 'c4-hint'
       )}
+      data-hint={isHint || undefined}
       aria-label={getColumnAriaLabel()}
       aria-disabled={disabled || isColumnFull}
     >
@@ -90,6 +94,7 @@ export const Column = memo(function Column({
             row={rowIndex}
             col={colIndex}
             previewPlayer={canDrop && isHovered && rowIndex === landingRow ? currentPlayer : null}
+            isHintTarget={isHint && rowIndex === landingRow}
           />
         )
       })}
